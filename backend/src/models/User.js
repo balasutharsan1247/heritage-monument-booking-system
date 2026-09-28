@@ -21,6 +21,10 @@ const userSchema = new mongoose.Schema({
     default: 'visitor',
     required: true,
   },
+  assignedMonument: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Monument',
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

@@ -82,6 +82,13 @@ const seedData = async () => {
     }
     console.log('Monuments seeded successfully.');
 
+    // Assign first monument to the staff member
+    await User.updateOne(
+      { email: 'staff@demo.local' },
+      { $set: { assignedMonument: monumentIds[0] } }
+    );
+    console.log('Staff monument assignment updated.');
+
     // 3. Visitor Logs (Sample data for dev only)
     // To ensure idempotency and avoid bloating the DB, we can delete existing demo logs for these monuments
     // and recreate a few sample logs.

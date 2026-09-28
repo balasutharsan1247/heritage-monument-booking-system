@@ -50,10 +50,20 @@ const ticketSchema = new mongoose.Schema({
     enum: ['booked', 'used', 'cancelled'],
     default: 'booked',
   },
+  checkInTime: {
+    type: Date,
+  },
+  scannedByStaffId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
+
+ticketSchema.index({ monumentId: 1, visitDate: 1, status: 1 });
+ticketSchema.index({ visitDate: 1, status: 1 });
 
 module.exports = mongoose.model('Ticket', ticketSchema);

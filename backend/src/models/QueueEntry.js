@@ -27,7 +27,7 @@ const queueEntrySchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['waiting', 'called', 'served', 'skipped'],
+    enum: ['waiting', 'called', 'completed', 'skipped'],
     default: 'waiting',
   },
   joinedAt: {
@@ -41,5 +41,7 @@ const queueEntrySchema = new mongoose.Schema({
     type: Date,
   },
 });
+
+queueEntrySchema.index({ monumentId: 1, joinedAt: 1 });
 
 module.exports = mongoose.model('QueueEntry', queueEntrySchema);
