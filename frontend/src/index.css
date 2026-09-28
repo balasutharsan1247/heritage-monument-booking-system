@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-maroon-50 text-maroon-950 dark:bg-maroon-950 dark:text-maroon-50 transition-colors duration-200;
+  }
+}
