@@ -1,0 +1,32 @@
+[
+  {
+    "Monument_ID": "M001",
+    "Date": "2025-01-01",
+    "Hour": 9,
+    "Visitor_Count": 150
+  },
+  {
+    "Monument_ID": "M001",
+    "Date": "2025-01-01",
+    "Hour": 10,
+    "Visitor_Count": 200
+  },
+  {
+    "Monument_ID": "M001",
+    "Date": "invalid-date",
+    "Hour": 25,
+    "Visitor_Count": -5
+  },
+  {
+    "Monument_ID": "M001",
+    "Date": "2025-01-01",
+    "Hour": 10,
+    "Visitor_Count": 200
+  },
+  {
+    "Monument_ID": "M002",
+    "Date": "2025-01-02",
+    "Hour": 14,
+    "Visitor_Count": null
+  }
+]

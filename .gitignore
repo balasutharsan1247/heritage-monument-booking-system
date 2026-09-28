@@ -1,2 +1,8 @@
 node_modules/
 .env
+
+# Government data intake
+backend/data_intake/raw/
+backend/data_intake/exports/
+backend/data_intake/credentials/
+backend/data_intake/reports/

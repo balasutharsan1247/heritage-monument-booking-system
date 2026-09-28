@@ -1,0 +1,24 @@
+{
+  "experiment_name": "Visitor Footfall Forecasting",
+  "target_variable": "Total_Visitors",
+  "forecast_horizon": "1 period (day/hour)",
+  "aggregation_level": "daily",
+  "monument_selection": [
+    "M001"
+  ],
+  "training_period": {
+    "start": "2025-01-01",
+    "end": "2025-01-01",
+    "note": "Awaiting more data. Currently only 1 day available."
+  },
+  "test_period": {
+    "start": "TBD",
+    "end": "TBD",
+    "note": "Requires future data collection."
+  },
+  "evaluation_metrics": [
+    "MAE",
+    "RMSE",
+    "MAPE"
+  ]
+}

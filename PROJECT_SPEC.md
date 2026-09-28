@@ -16,6 +16,7 @@ Build a beginner-friendly web prototype for heritage monuments that supports:
 7. ML-based visitor footfall prediction
 8. Optional demand-based price recommendation
 9. Comparative evaluation against a manual/static baseline
+10. Government data intake preparation
 
 ## Confirmed architecture
 Frontend:
