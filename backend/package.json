@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npx jest",
     "seed": "node src/seed.js",
     "report:data": "node data_intake/analyze_data.js data_intake/sample_fixture.json data_intake/exports",
     "test:data": "node data_intake/analyze_data.test.js"
@@ -20,8 +20,9 @@
     "cors": "^2.8.6",
     "dotenv": "^18.0.4",
     "express": "^5.2.1",
+    "google-auth-library": "^11.1.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.10.2",
+    "mongoose": "^8.0.3",
     "socket.io": "^4.8.4"
   },
   "devDependencies": {

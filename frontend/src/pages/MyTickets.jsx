@@ -43,6 +43,11 @@ export default function MyTickets() {
                 #{t.tokenNumber || '---'}
               </div>
               
+              {t.monumentId?.imageUrl && (
+                <div className="h-32 -mx-6 -mt-6 mb-4 overflow-hidden rounded-t-2xl">
+                  <img src={t.monumentId.imageUrl} alt={t.monumentId.name} className="w-full h-full object-cover" />
+                </div>
+              )}
               <h3 className="font-black text-2xl text-maroon-900 dark:text-maroon-100 mb-4 pr-16">{t.monumentId?.name || 'Monument'}</h3>
               
               <div className="space-y-2 mb-6">

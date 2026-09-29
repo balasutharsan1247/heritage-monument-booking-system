@@ -22,6 +22,7 @@ export const Layout = () => {
           </Link>
           <nav className="hidden md:flex items-center gap-6 font-medium">
             <Link to="/monuments" className="hover:text-maroon-200 transition-colors">Monuments</Link>
+            <Link to="/monuments" className="bg-white text-maroon-800 px-4 py-2 rounded-lg font-bold hover:bg-maroon-100 transition-colors shadow">Book Ticket</Link>
             {user?.role === 'visitor' && (
               <Link to="/my-tickets" className="hover:text-maroon-200 transition-colors flex items-center gap-1"><Ticket className="w-4 h-4"/> My Tickets</Link>
             )}
@@ -40,9 +41,15 @@ export const Layout = () => {
                 <Link to="/register" className="bg-maroon-600 px-4 py-2 rounded hover:bg-maroon-500 shadow transition-colors">Register</Link>
               </div>
             ) : (
-              <button onClick={handleLogout} className="flex items-center gap-1 hover:text-maroon-200 transition-colors">
-                <LogOut className="w-4 h-4" /> Logout
-              </button>
+              <div className="flex items-center gap-4 border-l border-maroon-600 pl-4 ml-2">
+                <div className="text-right hidden lg:block">
+                  <div className="text-sm font-bold text-white">{user.name}</div>
+                  <div className="text-xs text-maroon-200">{user.email}</div>
+                </div>
+                <button onClick={handleLogout} className="flex items-center gap-1 bg-maroon-700 hover:bg-maroon-600 px-3 py-2 rounded-lg transition-colors text-sm font-semibold">
+                  <LogOut className="w-4 h-4" /> Logout
+                </button>
+              </div>
             )}
           </nav>
         </div>

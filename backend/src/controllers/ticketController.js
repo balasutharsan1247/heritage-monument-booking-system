@@ -84,7 +84,7 @@ const bookTicket = async (req, res) => {
 
     // Prepare response without exposing sensitive data (though ticket doesn't have much)
     const responseTickets = tickets.map(t => ({
-      id: t._id,
+      _id: t._id,
       monumentId: t.monumentId,
       visitDate: t.visitDate,
       slotStart: t.slotStart,
@@ -106,8 +106,8 @@ const getMyTickets = async (req, res) => {
   try {
     const tickets = await Ticket.find({ visitorId: req.user.id }).populate('monumentId', 'name location');
     const formattedTickets = tickets.map(t => ({
-      id: t._id,
-      monument: t.monumentId,
+      _id: t._id,
+      monumentId: t.monumentId,
       visitDate: t.visitDate,
       slotStart: t.slotStart,
       slotEnd: t.slotEnd,
@@ -131,8 +131,8 @@ const getTicket = async (req, res) => {
     }
 
     res.json({ success: true, data: {
-      id: ticket._id,
-      monument: ticket.monumentId,
+      _id: ticket._id,
+      monumentId: ticket.monumentId,
       visitDate: ticket.visitDate,
       slotStart: ticket.slotStart,
       slotEnd: ticket.slotEnd,
@@ -162,7 +162,7 @@ const cancelTicket = async (req, res) => {
     await ticket.save();
 
     res.json({ success: true, message: 'Ticket cancelled successfully', data: {
-      id: ticket._id,
+      _id: ticket._id,
       status: ticket.status
     } });
   } catch (error) {

@@ -19,10 +19,18 @@ export default function MonumentDetails() {
 
   return (
     <div className="max-w-4xl mx-auto bg-white dark:bg-maroon-900 rounded-3xl shadow-xl overflow-hidden border border-maroon-100 dark:border-maroon-800">
-      <div className="bg-maroon-800 text-white p-10 text-center">
-        <h1 className="text-4xl md:text-5xl font-black mb-4 drop-shadow-md">{monument.name}</h1>
-        <div className="flex justify-center items-center gap-2 text-maroon-200 font-medium text-lg">
-          <MapPin className="w-5 h-5" /> {monument.location}
+      <div className="relative bg-maroon-800 text-white min-h-[300px] flex flex-col justify-end p-10 text-center overflow-hidden">
+        {monument.imageUrl && (
+          <div className="absolute inset-0 z-0">
+            <img src={monument.imageUrl} alt={monument.name} className="w-full h-full object-cover opacity-40" />
+            <div className="absolute inset-0 bg-gradient-to-t from-maroon-900 to-transparent"></div>
+          </div>
+        )}
+        <div className="relative z-10">
+          <h1 className="text-4xl md:text-5xl font-black mb-4 drop-shadow-md">{monument.name}</h1>
+          <div className="flex justify-center items-center gap-2 text-maroon-100 font-medium text-lg drop-shadow">
+            <MapPin className="w-5 h-5" /> {monument.location}
+          </div>
         </div>
       </div>
       

@@ -12,6 +12,7 @@ export const api = {
   // Auth
   register: (data) => fetch(`${API_URL}/auth/register`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
   login: (data) => fetch(`${API_URL}/auth/login`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
+  googleLogin: (token) => fetch(`${API_URL}/auth/google`, { method: 'POST', headers: getHeaders(), body: JSON.stringify({ token }) }).then(r => r.json()),
   getMe: () => fetch(`${API_URL}/auth/me`, { headers: getHeaders() }).then(r => r.json()),
 
   // Public
@@ -25,13 +26,13 @@ export const api = {
   cancelTicket: (id) => fetch(`${API_URL}/tickets/${id}/cancel`, { method: 'PATCH', headers: getHeaders() }).then(r => r.json()),
 
   // Queue
-  getMyQueue: (ticketId) => fetch(`${API_URL}/queue/my/${ticketId}`, { headers: getHeaders() }).then(r => r.json()),
+  getMyQueue: (ticketId) => fetch(`${API_URL}/queues/my/${ticketId}`, { headers: getHeaders() }).then(r => r.json()),
 
   // Staff
-  getStaffQueue: (monumentId) => fetch(`${API_URL}/staff/queue/${monumentId}`, { headers: getHeaders() }).then(r => r.json()),
-  callNext: (monumentId) => fetch(`${API_URL}/staff/queue/${monumentId}/call-next`, { method: 'POST', headers: getHeaders() }).then(r => r.json()),
-  skipVisitor: (monumentId, entryId) => fetch(`${API_URL}/staff/queue/${monumentId}/${entryId}/skip`, { method: 'POST', headers: getHeaders() }).then(r => r.json()),
-  completeVisit: (monumentId, entryId) => fetch(`${API_URL}/staff/queue/${monumentId}/${entryId}/complete`, { method: 'POST', headers: getHeaders() }).then(r => r.json()),
+  getStaffQueue: (monumentId) => fetch(`${API_URL}/staff/queues/${monumentId}`, { headers: getHeaders() }).then(r => r.json()),
+  callNext: (monumentId) => fetch(`${API_URL}/staff/queues/${monumentId}/call-next`, { method: 'POST', headers: getHeaders() }).then(r => r.json()),
+  skipVisitor: (monumentId, entryId) => fetch(`${API_URL}/staff/queues/${monumentId}/${entryId}/skip`, { method: 'POST', headers: getHeaders() }).then(r => r.json()),
+  completeVisit: (monumentId, entryId) => fetch(`${API_URL}/staff/queues/${monumentId}/${entryId}/complete`, { method: 'POST', headers: getHeaders() }).then(r => r.json()),
   validateTicket: (data) => fetch(`${API_URL}/staff/tickets/validate`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
 
   // Admin

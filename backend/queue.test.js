@@ -7,7 +7,7 @@ const Monument = require('./src/models/Monument');
 const Ticket = require('./src/models/Ticket');
 const QueueEntry = require('./src/models/QueueEntry');
 
-jest.setTimeout(60000); // Increase timeout for MongoMemoryServer
+jest.setTimeout(120000); // Increase timeout for MongoMemoryServer
 
 let mongoServer;
 let adminToken;

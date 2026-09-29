@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
   const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'visitor' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,6 +21,20 @@ export default function Register() {
       }
     } catch (err) {
       setError('An error occurred');
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await api.googleLogin(credentialResponse.credential);
+      if (res.success) {
+        login(res.data, res.data.token);
+        navigate('/');
+      } else {
+        setError(res.message);
+      }
+    } catch (err) {
+      setError('Google login failed');
     }
   };
 
@@ -35,11 +52,36 @@ export default function Register() {
           <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required className="w-full p-3 border rounded-lg dark:bg-maroon-950 dark:border-maroon-700 focus:ring-2 focus:ring-maroon-500 outline-none" placeholder="john@example.com" />
         </div>
         <div>
+          <label className="block text-sm font-semibold mb-1">Role</label>
+          <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full p-3 border rounded-lg dark:bg-maroon-950 dark:border-maroon-700 focus:ring-2 focus:ring-maroon-500 outline-none">
+            <option value="visitor">Visitor</option>
+            <option value="staff">Staff</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div>
           <label className="block text-sm font-semibold mb-1">Password</label>
           <input type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} required className="w-full p-3 border rounded-lg dark:bg-maroon-950 dark:border-maroon-700 focus:ring-2 focus:ring-maroon-500 outline-none" placeholder="••••••••" />
         </div>
         <button type="submit" className="w-full bg-maroon-700 text-white p-3 rounded-lg hover:bg-maroon-600 font-bold shadow-md transition-colors text-lg mt-2">Sign Up</button>
       </form>
+
+      <div className="mt-6">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300 dark:border-maroon-700"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white dark:bg-maroon-900 text-gray-500 dark:text-maroon-200">Or continue with</span>
+          </div>
+        </div>
+        <div className="mt-6 flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google login failed')}
+          />
+        </div>
+      </div>
     </div>
   );
 }

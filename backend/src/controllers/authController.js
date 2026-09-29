@@ -105,8 +105,61 @@ const getMe = async (req, res, next) => {
   }
 };
 
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || 'placeholder');
+
+// @desc    Authenticate with Google
+// @route   POST /api/auth/google
+// @access  Public
+const googleLoginUser = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'No Google token provided' });
+    }
+
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID || 'placeholder',
+    });
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create user if they don't exist
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(googleId, salt); // random password hash basically
+      
+      user = await User.create({
+        name,
+        email,
+        passwordHash,
+        role: 'visitor'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        _id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token: generateToken(user._id, user.role),
+      }
+    });
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(401).json({ success: false, message: 'Invalid Google token' });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
+  googleLoginUser,
   getMe,
 };

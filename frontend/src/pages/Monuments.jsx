@@ -9,7 +9,11 @@ export default function Monuments() {
 
   useEffect(() => {
     api.getMonuments().then(res => {
-      if (res.success) setMonuments(res.data);
+      if (res.success) {
+        setMonuments(res.data.monuments || res.data || []);
+      }
+    }).catch(err => {
+      console.error("Failed to load monuments:", err);
     }).finally(() => setLoading(false));
   }, []);
 
@@ -28,6 +32,11 @@ export default function Monuments() {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {monuments.map(m => (
           <div key={m._id} className="bg-white dark:bg-maroon-900 rounded-2xl shadow-lg hover:shadow-xl transition-shadow p-6 border border-maroon-100 dark:border-maroon-800 flex flex-col group">
+            {m.imageUrl && (
+              <div className="h-48 -mx-6 -mt-6 mb-4 overflow-hidden rounded-t-2xl">
+                <img src={m.imageUrl} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+              </div>
+            )}
             <h2 className="text-2xl font-bold text-maroon-800 dark:text-maroon-100 mb-2 group-hover:text-maroon-600 transition-colors">{m.name}</h2>
             <div className="flex items-center gap-1 text-sm font-semibold text-maroon-500 mb-3">
               <MapPin className="w-4 h-4" /> {m.location}

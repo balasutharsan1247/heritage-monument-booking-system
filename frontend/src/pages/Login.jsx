@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
@@ -25,6 +26,20 @@ export default function Login() {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await api.googleLogin(credentialResponse.credential);
+      if (res.success) {
+        login(res.data, res.data.token);
+        navigate('/');
+      } else {
+        setError(res.message);
+      }
+    } catch (err) {
+      setError('Google login failed');
+    }
+  };
+
   return (
     <div className="max-w-md mx-auto mt-10 bg-white dark:bg-maroon-900 p-8 rounded-2xl shadow-xl border border-maroon-100 dark:border-maroon-800">
       <h2 className="text-3xl font-extrabold mb-6 text-maroon-800 dark:text-maroon-50 text-center">Welcome Back</h2>
@@ -40,6 +55,22 @@ export default function Login() {
         </div>
         <button type="submit" className="w-full bg-maroon-700 text-white p-3 rounded-lg hover:bg-maroon-600 font-bold shadow-md transition-colors text-lg mt-2">Login</button>
       </form>
+      <div className="mt-6">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300 dark:border-maroon-700"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white dark:bg-maroon-900 text-gray-500 dark:text-maroon-200">Or continue with</span>
+          </div>
+        </div>
+        <div className="mt-6 flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError('Google login failed')}
+          />
+        </div>
+      </div>
     </div>
   );
 }

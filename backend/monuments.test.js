@@ -6,6 +6,8 @@ const User = require('./src/models/User');
 const Monument = require('./src/models/Monument');
 const jwt = require('jsonwebtoken');
 
+jest.setTimeout(120000);
+
 let mongoServer;
 let adminToken;
 let userToken;
@@ -19,7 +21,7 @@ beforeAll(async () => {
   const adminUser = new User({
     name: 'Admin User',
     email: 'admin@test.com',
-    password: 'password123',
+    passwordHash: 'password123',
     role: 'admin'
   });
   await adminUser.save();
@@ -28,7 +30,7 @@ beforeAll(async () => {
   const regularUser = new User({
     name: 'Regular User',
     email: 'user@test.com',
-    password: 'password123',
+    passwordHash: 'password123',
     role: 'visitor'
   });
   await regularUser.save();

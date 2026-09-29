@@ -8,6 +8,9 @@ const monumentSchema = new mongoose.Schema({
   description: {
     type: String,
   },
+  imageUrl: {
+    type: String,
+  },
   location: {
     type: String,
   },

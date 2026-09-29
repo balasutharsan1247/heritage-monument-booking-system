@@ -40,6 +40,12 @@ export default function PublicQueue() {
 
   return (
     <div className="max-w-2xl mx-auto text-center space-y-8 mt-10">
+      {monument.imageUrl && (
+        <div className="absolute inset-0 z-[-1] overflow-hidden opacity-10">
+          <img src={monument.imageUrl} alt={monument.name} className="w-full h-full object-cover blur-sm" />
+          <div className="absolute inset-0 bg-white dark:bg-maroon-900 opacity-80"></div>
+        </div>
+      )}
       <div className="flex justify-end">
         <SocketStatus state={socketState} onRefresh={fetchQueue} />
       </div>
