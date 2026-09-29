@@ -11,6 +11,8 @@ import {
   Activity
 } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const AdminPredictionView = () => {
   const [monuments, setMonuments] = useState([]);
   const [selectedMonument, setSelectedMonument] = useState('');
@@ -25,7 +27,7 @@ const AdminPredictionView = () => {
   useEffect(() => {
     const fetchMonuments = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/monuments');
+        const response = await fetch(`${API_URL}/monuments`);
         const json = await response.json();
         if (json.success) {
           setMonuments(json.data);
@@ -54,7 +56,7 @@ const AdminPredictionView = () => {
 
     try {
       // In a real scenario, this would have an auth token
-      const response = await fetch(`http://localhost:5000/api/admin/predictions/${selectedMonument}?date=${selectedDate}`, {
+      const response = await fetch(`${API_URL}/admin/predictions/${selectedMonument}?date=${selectedDate}`, {
         headers: {
           'Authorization': `Bearer fake-admin-token-for-tests`
         }
