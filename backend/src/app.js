@@ -10,7 +10,7 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors(process.env.ORIGIN));
 app.use(express.json());
 
 app.use('/api', healthRoutes);
