@@ -3,7 +3,79 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-maroon-50 text-maroon-950 dark:bg-maroon-950 dark:text-maroon-50 transition-colors duration-200;
+    background-color: #fdfbf7;
+    color: #1b1b1e;
+    font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background-color: #f6ced4;
+    color: #712330;
+  }
+
+  /* Accessible focus indicators */
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #fdfbf7, 0 0 0 4px #852535;
+  }
+}
+
+/* Custom Heritage Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f0e8;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d6c5b0;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9f293b;
+}
+
+/* Subtle pattern for heritage headers */
+.heritage-pattern {
+  background-color: #712330;
+  background-image: radial-gradient(rgba(212, 175, 55, 0.15) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.sandstone-pattern {
+  background-color: #fbf9f5;
+  background-image: radial-gradient(rgba(184, 140, 50, 0.08) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+
+/* Print styling for tickets */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  header, footer, nav, button:not(.print-include) {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

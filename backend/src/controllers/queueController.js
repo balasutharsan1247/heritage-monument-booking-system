@@ -136,7 +136,20 @@ exports.getMyQueueStatus = async (req, res, next) => {
   try {
     const { ticketId } = req.params;
 
-    const entry = await QueueEntry.findOne({ ticketId });
+    let entry = await QueueEntry.findOne({ ticketId });
+
+    if (!entry) {
+      const ticket = await Ticket.findById(ticketId);
+      if (ticket && ticket.status !== 'cancelled') {
+        entry = await QueueEntry.create({
+          ticketId: ticket._id,
+          monumentId: ticket.monumentId,
+          tokenNumber: ticket.tokenNumber,
+          status: 'waiting',
+          joinedAt: new Date()
+        });
+      }
+    }
 
     if (!entry) {
       return res.status(404).json({ success: false, message: 'Queue entry not found' });
@@ -156,12 +169,53 @@ exports.getMyQueueStatus = async (req, res, next) => {
       estimatedWait = entriesAhead * 5;
     }
 
+    const currentlyServing = await QueueEntry.findOne({
+      monumentId: entry.monumentId,
+      status: 'called'
+    }).sort({ calledAt: -1 });
+
     res.status(200).json({
       success: true,
       data: {
         ...entry.toObject(),
         entriesAhead,
-        estimatedWait // in minutes
+        estimatedWait, // in minutes
+        currentlyServing: currentlyServing ? {
+          tokenNumber: currentlyServing.tokenNumber,
+          calledAt: currentlyServing.calledAt
+        } : null
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Public: Get live queue status for monument displays without auth
+exports.getPublicQueueStatus = async (req, res, next) => {
+  try {
+    const { monumentId } = req.params;
+
+    const current = await QueueEntry.findOne({ monumentId, status: 'called' })
+      .sort({ calledAt: -1 });
+
+    const waiting = await QueueEntry.find({ monumentId, status: 'waiting' })
+      .sort({ joinedAt: 1 });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        current: current ? {
+          _id: current._id,
+          tokenNumber: current.tokenNumber,
+          calledAt: current.calledAt
+        } : null,
+        waiting: waiting.map(w => ({
+          _id: w._id,
+          tokenNumber: w.tokenNumber,
+          joinedAt: w.joinedAt
+        })),
+        totalWaiting: waiting.length
       }
     });
   } catch (error) {

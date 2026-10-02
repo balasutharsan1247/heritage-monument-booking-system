@@ -107,9 +107,22 @@ const deleteMonument = async (req, res, next) => {
   }
 };
 
+const getAdminMonuments = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 100;
+    
+    const result = await monumentService.getMonuments(page, limit, false);
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getPublicMonuments,
   getPublicMonumentById,
+  getAdminMonuments,
   createMonument,
   updateMonument,
   deleteMonument

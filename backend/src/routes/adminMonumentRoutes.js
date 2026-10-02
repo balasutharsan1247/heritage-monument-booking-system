@@ -8,6 +8,7 @@ const router = express.Router();
 router.use(protect);
 router.use(authorize('admin'));
 
+router.get('/', monumentController.getAdminMonuments);
 router.post('/', monumentController.createMonument);
 router.patch('/:id', monumentController.updateMonument);
 router.delete('/:id', monumentController.deleteMonument);

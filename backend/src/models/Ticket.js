@@ -42,6 +42,11 @@ const ticketSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  numberOfPeople: {
+    type: Number,
+    default: 1,
+    min: 1,
+  },
   qrCodeData: {
     type: String,
   },

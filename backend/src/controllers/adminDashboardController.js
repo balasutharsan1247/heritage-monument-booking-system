@@ -1,5 +1,8 @@
 const Ticket = require('../models/Ticket');
 const QueueEntry = require('../models/QueueEntry');
+const Monument = require('../models/Monument');
+const User = require('../models/User');
+const Wallet = require('../models/Wallet');
 const mongoose = require('mongoose');
 
 // Helper to get date boundaries
@@ -54,13 +57,54 @@ exports.getSummary = async (req, res) => {
       totalVisitors: 0
     };
 
+    const totalMonuments = await Monument.countDocuments({ isActive: true });
+    const allMonumentsCount = await Monument.countDocuments();
+    const totalUsers = await User.countDocuments();
+
+    const validTickets = await Ticket.countDocuments({
+      visitDate: { $gte: start, $lte: end },
+      status: 'booked'
+    });
+    const usedTickets = await Ticket.countDocuments({
+      visitDate: { $gte: start, $lte: end },
+      status: 'used'
+    });
+    const cancelledTickets = await Ticket.countDocuments({
+      visitDate: { $gte: start, $lte: end },
+      status: 'cancelled'
+    });
+
+    const adminUser = await User.findOne({ role: 'admin' });
+    let treasuryBalance = 0;
+    if (adminUser) {
+      const adminWallet = await Wallet.findOne({ userId: adminUser._id });
+      if (adminWallet) {
+        treasuryBalance = adminWallet.balance;
+      }
+    }
+
     res.json({
       success: true,
       data: {
+        totalTickets: result.totalTickets,
+        totalRevenue: result.totalRevenue,
+        treasuryBalance,
+        totalVisitors: result.totalVisitors,
+        validTickets,
+        usedTickets,
+        cancelledTickets,
+        totalMonuments,
+        allMonumentsCount,
+        totalUsers,
         measured: {
           totalTickets: result.totalTickets,
           totalRevenue: result.totalRevenue,
           totalVisitors: result.totalVisitors,
+          validTickets,
+          usedTickets,
+          cancelledTickets,
+          totalMonuments,
+          totalUsers
         }
       }
     });
@@ -89,10 +133,10 @@ exports.getMonumentSummary = async (req, res) => {
       {
         $group: {
           _id: null,
-          totalTickets: { $sum: 1 },
+          totalTickets: { $sum: { $ifNull: ["$numberOfPeople", 1] } },
           totalRevenue: { $sum: "$price" },
           totalVisitors: { 
-            $sum: { $cond: [{ $eq: ["$status", "used"] }, 1, 0] } 
+            $sum: { $cond: [{ $eq: ["$status", "used"] }, { $ifNull: ["$numberOfPeople", 1] }, 0] } 
           }
         }
       }
@@ -243,6 +287,39 @@ exports.getMonumentQueue = async (req, res) => {
       }
     });
 
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// GET /api/admin/dashboard/queues/overview
+exports.getQueuesOverview = async (req, res) => {
+  try {
+    const monuments = await Monument.find({}).select('name location capacity openingTime closingTime isActive');
+    
+    const overview = await Promise.all(
+      monuments.map(async (m) => {
+        const waitingCount = await QueueEntry.countDocuments({ monumentId: m._id, status: 'waiting' });
+        const currentEntry = await QueueEntry.findOne({ monumentId: m._id, status: 'called' })
+          .sort({ calledAt: -1 });
+        const completedToday = await QueueEntry.countDocuments({ monumentId: m._id, status: 'completed' });
+        
+        return {
+          monumentId: m._id,
+          name: m.name,
+          location: m.location,
+          capacity: m.capacity,
+          isActive: m.isActive,
+          waitingCount,
+          currentServing: currentEntry ? currentEntry.tokenNumber : null,
+          completedToday,
+          estimatedWaitMinutes: waitingCount * 5
+        };
+      })
+    );
+
+    res.json({ success: true, data: overview });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Server error' });

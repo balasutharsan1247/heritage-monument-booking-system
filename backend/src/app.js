@@ -24,6 +24,7 @@ app.use('/api/staff/queues', require('./routes/staffQueueRoutes'));
 app.use('/api/staff/tickets', require('./routes/staffTicketRoutes'));
 app.use('/api/admin/dashboard', require('./routes/adminDashboardRoutes'));
 app.use('/api/admin/predictions', require('./routes/predictionRoutes'));
+app.use('/api/wallet', require('./routes/walletRoutes'));
 
 app.use(errorHandler);
 

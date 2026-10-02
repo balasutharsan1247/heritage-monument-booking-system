@@ -27,8 +27,13 @@ const queueEntrySchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['waiting', 'called', 'completed', 'skipped'],
+    enum: ['waiting', 'called', 'completed', 'skipped', 'served'],
     default: 'waiting',
+  },
+  numberOfPeople: {
+    type: Number,
+    default: 1,
+    min: 1,
   },
   joinedAt: {
     type: Date,

@@ -1,82 +1,197 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
-import { Ticket, Calendar, Clock, QrCode } from 'lucide-react';
+import { Ticket as TicketIcon } from 'lucide-react';
+import { TicketCard } from '../components/tickets/TicketCard';
+import { TicketCardSkeleton } from '../components/ui/Skeleton';
+import { Tabs } from '../components/ui/Tabs';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { EmptyState } from '../components/ui/EmptyState';
+import { Breadcrumbs } from '../components/ui/Breadcrumbs';
+import { ErrorState } from '../components/ui/ErrorState';
+import { useToast } from '../components/ui/Toast';
 
 export default function MyTickets() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('all');
+
+  const [cancellingTicketId, setCancellingTicketId] = useState(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
+
+  const toast = useToast();
+
+  const fetchTickets = () => {
+    setLoading(true);
+    setError(null);
+    api.getMyTickets()
+      .then((res) => {
+        if (res.success) {
+          setTickets(res.data || []);
+        } else {
+          setError(res.message || 'Failed to load tickets');
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load tickets:', err);
+        setError(err);
+      })
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    api.getMyTickets().then(res => {
-      if (res.success) setTickets(res.data);
-    }).finally(() => setLoading(false));
+    fetchTickets();
   }, []);
 
-  const handleCancel = async (id) => {
-    if (!confirm('Are you sure you want to cancel this ticket?')) return;
-    const res = await api.cancelTicket(id);
-    if (res.success) {
-      setTickets(tickets.map(t => t._id === id ? { ...t, status: 'cancelled' } : t));
+  const handleConfirmCancel = async () => {
+    if (!cancellingTicketId) return;
+    setCancelLoading(true);
+    try {
+      const res = await api.cancelTicket(cancellingTicketId);
+      if (res.success) {
+        setTickets((prev) =>
+          prev.map((t) => (t._id === cancellingTicketId ? { ...t, status: 'cancelled' } : t))
+        );
+        toast.success('Ticket cancelled.');
+      } else {
+        toast.error(res.message || 'Could not cancel ticket.');
+      }
+    } catch (err) {
+      toast.error('Network error cancelling ticket.');
+    } finally {
+      setCancelLoading(false);
+      setCancellingTicketId(null);
     }
   };
 
-  if (loading) return <div className="p-12 text-center text-xl animate-pulse">Loading your history...</div>;
+  const filteredTickets = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return tickets.filter((t) => {
+      const visitDate = new Date(t.visitDate);
+      visitDate.setHours(0, 0, 0, 0);
+      const isPast = visitDate < today || t.status === 'used';
+      const isCancelled = t.status === 'cancelled';
+      const isUpcoming = (t.status === 'booked' || t.status === 'valid') && !isPast;
+
+      if (activeTab === 'upcoming') return isUpcoming;
+      if (activeTab === 'past') return isPast && !isCancelled;
+      if (activeTab === 'cancelled') return isCancelled;
+      return true;
+    });
+  }, [tickets, activeTab]);
+
+  const tabsConfig = [
+    { id: 'all', label: 'All', count: tickets.length },
+    {
+      id: 'upcoming',
+      label: 'Upcoming',
+      count: tickets.filter((t) => t.status === 'booked' || t.status === 'valid').length,
+    },
+    {
+      id: 'past',
+      label: 'Visited',
+      count: tickets.filter((t) => t.status === 'used').length,
+    },
+    {
+      id: 'cancelled',
+      label: 'Cancelled',
+      count: tickets.filter((t) => t.status === 'cancelled').length,
+    },
+  ];
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      <div className="flex items-center gap-3 border-b-2 border-maroon-100 dark:border-maroon-800 pb-4">
-        <Ticket className="w-8 h-8 text-maroon-700 dark:text-maroon-300" />
-        <h1 className="text-4xl font-extrabold text-maroon-800 dark:text-maroon-50">My Tickets</h1>
+    <div className="space-y-6 pb-12 max-w-4xl mx-auto">
+      <Breadcrumbs items={[{ label: 'My Tickets' }]} />
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-sandstone-200 pb-4">
+        <div>
+          <h1 className="text-3xl font-bold font-serif text-charcoal-900">
+            My Tickets
+          </h1>
+          <p className="text-xs text-charcoal-500 mt-0.5">
+            Your reserved entry passes and tickets
+          </p>
+        </div>
+
+        <Link to="/monuments">
+          <button className="bg-maroon-800 hover:bg-maroon-700 text-white px-4 py-2 rounded-xl font-semibold text-xs transition-colors cursor-pointer">
+            + Book Visit
+          </button>
+        </Link>
       </div>
 
-      {!tickets.length ? (
-        <div className="bg-white dark:bg-maroon-900 p-12 text-center rounded-2xl shadow-md border border-maroon-100 dark:border-maroon-800">
-          <p className="text-xl text-maroon-600 mb-6">You haven't booked any tickets yet.</p>
-          <Link to="/monuments" className="bg-maroon-700 text-white px-6 py-3 rounded-lg font-bold">Book a Visit</Link>
-        </div>
-      ) : (
-        <div className="grid md:grid-cols-2 gap-6">
-          {tickets.map(t => (
-            <div key={t._id} className="bg-white dark:bg-maroon-900 border-2 border-maroon-100 dark:border-maroon-800 rounded-2xl shadow hover:shadow-lg transition-shadow p-6 flex flex-col relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-maroon-50 dark:bg-maroon-950 px-4 py-2 rounded-bl-2xl font-bold font-mono text-sm border-b border-l border-maroon-100 dark:border-maroon-800">
-                #{t.tokenNumber || '---'}
-              </div>
-              
-              {t.monumentId?.imageUrl && (
-                <div className="h-32 -mx-6 -mt-6 mb-4 overflow-hidden rounded-t-2xl">
-                  <img src={t.monumentId.imageUrl} alt={t.monumentId.name} className="w-full h-full object-cover" />
-                </div>
-              )}
-              <h3 className="font-black text-2xl text-maroon-900 dark:text-maroon-100 mb-4 pr-16">{t.monumentId?.name || 'Monument'}</h3>
-              
-              <div className="space-y-2 mb-6">
-                <div className="flex items-center gap-2 text-maroon-700 dark:text-maroon-300 font-medium">
-                  <Calendar className="w-4 h-4" /> {new Date(t.visitDate).toLocaleDateString()}
-                </div>
-                <div className="flex items-center gap-2 text-maroon-700 dark:text-maroon-300 font-medium">
-                  <Clock className="w-4 h-4" /> {t.slotStart} - {t.slotEnd}
-                </div>
-              </div>
+      {/* Tabs */}
+      {!loading && tickets.length > 0 && (
+        <Tabs
+          tabs={tabsConfig}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          variant="pills"
+        />
+      )}
 
-              <div className="flex justify-between items-center mt-auto pt-4 border-t-2 border-maroon-50 dark:border-maroon-800">
-                <span className={`px-4 py-1.5 text-xs font-black uppercase rounded-full tracking-widest ${t.status === 'valid' ? 'bg-green-100 text-green-800 border border-green-200' : t.status === 'used' ? 'bg-gray-100 text-gray-800' : 'bg-red-100 text-red-800 border border-red-200'}`}>
-                  {t.status}
-                </span>
-                
-                <div className="flex items-center gap-3">
-                  {t.status === 'valid' && (
-                    <button onClick={() => handleCancel(t._id)} className="text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors">Cancel</button>
-                  )}
-                  <Link to={`/tickets/${t._id}`} className="flex items-center gap-1 bg-maroon-100 text-maroon-800 dark:bg-maroon-800 dark:text-maroon-100 px-4 py-1.5 rounded-lg font-bold text-sm hover:bg-maroon-200 transition-colors">
-                    <QrCode className="w-4 h-4" /> View QR
-                  </Link>
-                </div>
-              </div>
-            </div>
+      {error && (
+        <ErrorState
+          error={error}
+          title="Could not load tickets"
+          onRetry={fetchTickets}
+        />
+      )}
+
+      {loading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <TicketCardSkeleton key={i} />
           ))}
         </div>
       )}
+
+      {!loading && !error && tickets.length === 0 && (
+        <EmptyState
+          icon={TicketIcon}
+          title="No Tickets Yet"
+          description="You haven't booked any monument passes yet."
+          actionLabel="Explore Monuments"
+          actionHref="/monuments"
+        />
+      )}
+
+      {!loading && !error && tickets.length > 0 && filteredTickets.length === 0 && (
+        <EmptyState
+          icon={TicketIcon}
+          title="No matching tickets"
+          description={`No tickets found under "${activeTab}".`}
+        />
+      )}
+
+      {!loading && !error && filteredTickets.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredTickets.map((t) => (
+            <TicketCard
+              key={t._id}
+              ticket={t}
+              onCancel={(id) => setCancellingTicketId(id)}
+            />
+          ))}
+        </div>
+      )}
+
+      <ConfirmDialog
+        isOpen={Boolean(cancellingTicketId)}
+        onClose={() => setCancellingTicketId(null)}
+        onConfirm={handleConfirmCancel}
+        title="Cancel Ticket?"
+        message="Are you sure you want to cancel this booking?"
+        confirmText="Cancel Ticket"
+        cancelText="Keep"
+        variant="danger"
+        loading={cancelLoading}
+      />
+
     </div>
   );
 }

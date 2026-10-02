@@ -8,6 +8,7 @@
     "dev": "nodemon src/server.js",
     "test": "npx jest",
     "seed": "node src/seed.js",
+    "create:admin": "node create_admin.js",
     "report:data": "node data_intake/analyze_data.js data_intake/sample_fixture.json data_intake/exports",
     "test:data": "node data_intake/analyze_data.test.js"
   },
