@@ -149,4 +149,53 @@ describe('Queue Management Tests', () => {
     expect(res.body.data.entriesAhead).toBe(2);
     expect(res.body.data.estimatedWait).toBe(10); // 2 * 5
   });
+
+  it('Should verify and validate ticket at gate, marking ticket used and queue entry completed', async () => {
+    const valTicket = await Ticket.create({
+      visitorId,
+      monumentId,
+      visitDate: new Date(),
+      slotStart: '00:00',
+      slotEnd: '23:59',
+      tokenNumber: 'GATE-PASS-1',
+      price: 15,
+      status: 'booked'
+    });
+
+    await QueueEntry.create({
+      ticketId: valTicket._id,
+      monumentId,
+      tokenNumber: valTicket.tokenNumber,
+      status: 'waiting'
+    });
+
+    // 1. Verify
+    const verifyRes = await request(app)
+      .post('/api/staff/tickets/verify')
+      .set('Authorization', `Bearer ${staffToken}`)
+      .send({ ticketId: valTicket._id.toString(), selectedMonumentId: monumentId.toString() });
+
+    expect(verifyRes.status).toBe(200);
+    expect(verifyRes.body.data.valid).toBe(true);
+
+    // 2. Validate & Admit
+    const validateRes = await request(app)
+      .post('/api/staff/tickets/validate')
+      .set('Authorization', `Bearer ${staffToken}`)
+      .send({ ticketId: valTicket._id.toString(), selectedMonumentId: monumentId.toString() });
+
+    expect(validateRes.status).toBe(200);
+    expect(validateRes.body.data.status).toBe('used');
+    expect(validateRes.body.data.queueStatus).toBe('completed');
+
+    // 3. Confirm in DB
+    const dbTicket = await Ticket.findById(valTicket._id);
+    expect(dbTicket.status).toBe('used');
+    expect(dbTicket.checkInTime).toBeDefined();
+
+    const dbQueue = await QueueEntry.findOne({ ticketId: valTicket._id });
+    expect(dbQueue.status).toBe('completed');
+    expect(dbQueue.completedAt).toBeDefined();
+  });
 });
+

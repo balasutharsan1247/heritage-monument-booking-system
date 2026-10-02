@@ -1,23 +1,56 @@
 const staffTicketService = require('../services/staffTicketService');
 
-const validateTicket = async (req, res, next) => {
+const verifyTicket = async (req, res, next) => {
   try {
-    const { ticketId, qrPayload } = req.body;
-    
-    // We assume the staff member's monument scope is not strictly checked here for MVP,
-    // or maybe the staff member selects the monument they are scanning for.
-    // The requirement says: "Verify that the ticket exists, belongs to the selected monument"
-    // Wait, the client will supply the selected monument id. Or maybe the ticket itself has the monumentId.
-    // Let's pass the body to the service
-    const validationResult = await staffTicketService.validateTicket({
+    const { ticketId, tokenNumber, qrPayload, qrCodeData, selectedMonumentId, monumentId } = req.body;
+
+    const verificationResult = await staffTicketService.verifyTicket({
       ticketId,
-      qrPayload,
-      staffId: req.user.id,
-      selectedMonumentId: req.body.monumentId // if they are validating for a specific monument
+      tokenNumber,
+      qrPayload: qrPayload || qrCodeData,
+      selectedMonumentId: selectedMonumentId || monumentId
     });
 
     res.status(200).json({
       success: true,
+      data: verificationResult
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const validateTicket = async (req, res, next) => {
+  try {
+    const { ticketId, tokenNumber, qrPayload, qrCodeData, selectedMonumentId, monumentId, forceMark } = req.body;
+    
+    const validationResult = await staffTicketService.validateTicket({
+      ticketId,
+      tokenNumber,
+      qrPayload: qrPayload || qrCodeData,
+      staffId: req.user.id,
+      selectedMonumentId: selectedMonumentId || monumentId,
+      forceMark
+    });
+
+    const io = req.app.get('io');
+    if (io) {
+      if (validationResult.monumentId) {
+        io.to(`monument_${validationResult.monumentId}`).emit('queueUpdated', { monumentId: validationResult.monumentId });
+      }
+      // Notify specific ticket room that entry was scanned
+      if (validationResult.ticketId) {
+        io.emit(`ticket_${validationResult.ticketId}_admitted`, {
+          ticketId: validationResult.ticketId,
+          checkInTime: validationResult.checkInTime,
+          status: 'used'
+        });
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Ticket successfully validated and marked as admitted.',
       data: validationResult
     });
   } catch (error) {
@@ -26,5 +59,6 @@ const validateTicket = async (req, res, next) => {
 };
 
 module.exports = {
+  verifyTicket,
   validateTicket
 };
