@@ -90,7 +90,8 @@ export default function Wallet() {
       const res = await api.topupWallet({
         amount: amountNum,
         paymentMethod,
-        description: `Top-up via ${paymentMethod}`,
+        description: isAdmin ? `Treasury Allocation via ${paymentMethod}` : `Top-up via ${paymentMethod}`,
+        purpose: isAdmin ? 'grant' : 'topup',
       });
 
       if (res.success) {

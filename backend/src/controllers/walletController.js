@@ -64,12 +64,19 @@ const topupWallet = async (req, res) => {
     }
 
     if (isAdmin) {
+      if (!purpose || purpose === 'topup') {
+        return res.status(403).json({
+          success: false,
+          message: 'Admins cannot manually add money to personal wallet. Central Treasury accumulates audited ticket revenue.',
+        });
+      }
+
       // Admins record official allocations or grants to Central Treasury
       const result = await treasuryService.recordTreasuryTransaction({
         adminUserId: req.user.id,
         type: 'credit',
         amount: numAmount,
-        purpose: purpose === 'topup' ? 'grant' : purpose,
+        purpose,
         description: description || 'Treasury Capital Inflow / Grant',
         paymentMethod,
       });
