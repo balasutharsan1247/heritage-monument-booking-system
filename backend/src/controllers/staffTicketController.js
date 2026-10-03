@@ -1,8 +1,20 @@
 const staffTicketService = require('../services/staffTicketService');
+const User = require('../models/User');
 
 const verifyTicket = async (req, res, next) => {
   try {
-    const { ticketId, tokenNumber, qrPayload, qrCodeData, selectedMonumentId, monumentId } = req.body;
+    let { ticketId, tokenNumber, qrPayload, qrCodeData, selectedMonumentId, monumentId } = req.body;
+
+    if (req.user && req.user.role === 'staff') {
+      const staffUser = await User.findById(req.user.id);
+      if (!staffUser || !staffUser.assignedMonument) {
+        return res.status(403).json({
+          success: false,
+          message: 'Staff member is not assigned to any monument site. Please contact an administrator.'
+        });
+      }
+      selectedMonumentId = staffUser.assignedMonument.toString();
+    }
 
     const verificationResult = await staffTicketService.verifyTicket({
       ticketId,
@@ -22,8 +34,19 @@ const verifyTicket = async (req, res, next) => {
 
 const validateTicket = async (req, res, next) => {
   try {
-    const { ticketId, tokenNumber, qrPayload, qrCodeData, selectedMonumentId, monumentId, forceMark } = req.body;
+    let { ticketId, tokenNumber, qrPayload, qrCodeData, selectedMonumentId, monumentId, forceMark } = req.body;
     
+    if (req.user && req.user.role === 'staff') {
+      const staffUser = await User.findById(req.user.id);
+      if (!staffUser || !staffUser.assignedMonument) {
+        return res.status(403).json({
+          success: false,
+          message: 'Staff member is not assigned to any monument site. Please contact an administrator.'
+        });
+      }
+      selectedMonumentId = staffUser.assignedMonument.toString();
+    }
+
     const validationResult = await staffTicketService.validateTicket({
       ticketId,
       tokenNumber,

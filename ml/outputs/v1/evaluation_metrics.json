@@ -1,0 +1,17 @@
+{
+  "baseline": {
+    "MAE": 526.6,
+    "RMSE": 1033.67,
+    "MAPE": 20.76,
+    "evaluated_observations": 460
+  },
+  "proposed_model": {
+    "MAE": 185.32,
+    "RMSE": 257.12,
+    "MAPE": 7.63,
+    "evaluated_observations": 460
+  },
+  "mae_improvement_percent": 64.81,
+  "rmse_improvement_percent": 75.13,
+  "evaluation_timestamp": "2026-10-02T08:53:14.863025+00:00"
+}

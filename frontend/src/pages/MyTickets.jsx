@@ -109,8 +109,8 @@ export default function MyTickets() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-sandstone-200 pb-4">
         <div>
-          <h1 className="text-3xl font-bold font-serif text-charcoal-900">
-            My Tickets
+          <h1 className="text-3xl font-extrabold font-sans text-charcoal-900">
+            My Entry Passes
           </h1>
           <p className="text-xs text-charcoal-500 mt-0.5">
             Your reserved entry passes and tickets

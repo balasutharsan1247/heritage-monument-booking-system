@@ -14,14 +14,16 @@ const generateToken = (id, role) => {
 // @access  Public
 const registerUser = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: 'Please add all fields' });
     }
 
-    // Check if user exists
-    const userExists = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if user exists with normalized email
+    const userExists = await User.findOne({ email: normalizedEmail });
     if (userExists) {
       return res.status(400).json({ success: false, message: 'User already exists' });
     }
@@ -30,12 +32,12 @@ const registerUser = async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Create user
+    // Create user - Public registrations are strictly visitor
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: normalizedEmail,
       passwordHash,
-      role: role || 'visitor'
+      role: 'visitor'
     });
 
     if (user) {
@@ -46,6 +48,7 @@ const registerUser = async (req, res, next) => {
           name: user.name,
           email: user.email,
           role: user.role,
+          assignedMonument: null,
           token: generateToken(user._id, user.role),
         }
       });
@@ -68,8 +71,10 @@ const loginUser = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Please provide email and password' });
     }
 
-    // Check for user email
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check for user email and populate assigned monument
+    const user = await User.findOne({ email: normalizedEmail }).populate('assignedMonument', 'name location openingTime closingTime');
 
     if (user && (await bcrypt.compare(password, user.passwordHash))) {
       res.json({
@@ -79,6 +84,7 @@ const loginUser = async (req, res, next) => {
           name: user.name,
           email: user.email,
           role: user.role,
+          assignedMonument: user.assignedMonument,
           token: generateToken(user._id, user.role),
         }
       });
@@ -95,7 +101,9 @@ const loginUser = async (req, res, next) => {
 // @access  Private
 const getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id).select('-passwordHash');
+    const user = await User.findById(req.user.id)
+      .select('-passwordHash')
+      .populate('assignedMonument', 'name location openingTime closingTime');
     res.status(200).json({
       success: true,
       data: user
@@ -148,6 +156,7 @@ const googleLoginUser = async (req, res, next) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        assignedMonument: user.assignedMonument,
         token: generateToken(user._id, user.role),
       }
     });

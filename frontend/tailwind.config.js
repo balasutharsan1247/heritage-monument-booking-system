@@ -17,6 +17,7 @@ export default {
           600: '#bd374d',
           700: '#9f293b',
           800: '#852535',
+          850: '#5c1722',
           900: '#712330',
           950: '#46131c',
         },
@@ -68,12 +69,14 @@ export default {
         }
       },
       fontFamily: {
-        serif: ['Cinzel', 'Playfair Display', 'Georgia', 'serif'],
-        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       boxShadow: {
-        'heritage': '0 4px 20px -2px rgba(113, 35, 48, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04)',
-        'heritage-lg': '0 10px 30px -4px rgba(113, 35, 48, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.06)',
+        'heritage-sm': '0 2px 10px -1px rgba(113, 35, 48, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.04)',
+        'heritage': '0 8px 24px -4px rgba(113, 35, 48, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04)',
+        'heritage-lg': '0 16px 36px -6px rgba(113, 35, 48, 0.12), 0 6px 12px -2px rgba(0, 0, 0, 0.06)',
+        'heritage-glow': '0 0 25px rgba(204, 165, 74, 0.25)',
       }
     },
   },

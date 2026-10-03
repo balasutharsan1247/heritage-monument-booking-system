@@ -49,7 +49,32 @@ export const api = {
   getAdminMonuments: () => fetch(`${API_URL}/admin/monuments`, { headers: getHeaders() }).then(r => r.json()),
   createMonument: (data) => fetch(`${API_URL}/admin/monuments`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
   updateMonument: (id, data) => fetch(`${API_URL}/admin/monuments/${id}`, { method: 'PATCH', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
+  deleteMonument: (id) => fetch(`${API_URL}/admin/monuments/${id}`, { method: 'DELETE', headers: getHeaders() }).then(r => r.json()),
+  getMonumentAnalytics: (monumentId, startDate, endDate) => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return fetch(`${API_URL}/admin/dashboard/${monumentId}${qs}`, { headers: getHeaders() }).then(r => r.json());
+  },
   getPrediction: (monumentId, date) => fetch(`${API_URL}/admin/predictions/${monumentId}?date=${date}`, { headers: getHeaders() }).then(r => r.json()),
+  getAdminUsers: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return fetch(`${API_URL}/admin/users${qs ? `?${qs}` : ''}`, { headers: getHeaders() }).then(r => r.json());
+  },
+  createAdminUser: (data) => fetch(`${API_URL}/admin/users`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
+  updateAdminUser: (id, data) => fetch(`${API_URL}/admin/users/${id}`, { method: 'PATCH', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
+  deleteAdminUser: (id) => fetch(`${API_URL}/admin/users/${id}`, { method: 'DELETE', headers: getHeaders() }).then(r => r.json()),
+
+  // Treasury Management
+  getTreasury: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return fetch(`${API_URL}/admin/treasury${qs ? `?${qs}` : ''}`, { headers: getHeaders() }).then(r => r.json());
+  },
+  createTreasuryTransaction: (data) => fetch(`${API_URL}/admin/treasury/transactions`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
+  updateTreasuryTransaction: (id, data) => fetch(`${API_URL}/admin/treasury/transactions/${id}`, { method: 'PATCH', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
+  reverseTreasuryTransaction: (id, data = {}) => fetch(`${API_URL}/admin/treasury/transactions/${id}`, { method: 'DELETE', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
+  reconcileTreasury: () => fetch(`${API_URL}/admin/treasury/reconcile`, { method: 'POST', headers: getHeaders() }).then(r => r.json()),
 
   // Virtual Wallet
   getWallet: () => fetch(`${API_URL}/wallet`, { headers: getHeaders() }).then(r => r.json()),

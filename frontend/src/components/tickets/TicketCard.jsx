@@ -5,6 +5,8 @@ import { StatusBadge } from '../ui/StatusBadge';
 import { Button } from '../ui/Button';
 import { OptimizedImage } from '../ui/OptimizedImage';
 
+const DEFAULT_TAJ_MAHAL_IMAGE = '/images/taj-mahal.jpg';
+
 export const TicketCard = ({
   ticket,
   onCancel,
@@ -15,7 +17,12 @@ export const TicketCard = ({
   const monument = typeof ticket.monumentId === 'object' ? ticket.monumentId : null;
   const monumentName = monument?.name || 'Heritage Monument';
   const monumentLocation = monument?.location || '';
-  const monumentImage = monument?.imageUrl || '';
+  const rawImageUrl = monument?.imageUrl?.trim();
+  const monumentImage = rawImageUrl
+    ? (rawImageUrl.startsWith('http://') || rawImageUrl.startsWith('https://') || rawImageUrl.startsWith('data:') || rawImageUrl.startsWith('/')
+      ? rawImageUrl
+      : `/${rawImageUrl}`)
+    : DEFAULT_TAJ_MAHAL_IMAGE;
 
   const canCancel = ticket.status === 'booked' || ticket.status === 'valid';
 
@@ -31,18 +38,13 @@ export const TicketCard = ({
       
       {/* Top Header with Image & Token Chip */}
       <div className="relative h-36 bg-sandstone-100 overflow-hidden">
-        {monumentImage ? (
-          <OptimizedImage
-            src={monumentImage}
-            alt={monumentName}
-            aspectRatio="h-full w-full"
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        ) : (
-          <div className="w-full h-full bg-maroon-900 flex items-center justify-center text-gold-400">
-            <span className="font-serif font-bold text-lg">{monumentName}</span>
-          </div>
-        )}
+        <OptimizedImage
+          src={monumentImage}
+          alt={monumentName}
+          aspectRatio="h-full w-full"
+          fallbackSrc={DEFAULT_TAJ_MAHAL_IMAGE}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
 
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal-950/80 via-charcoal-950/30 to-transparent pointer-events-none" />
 
@@ -53,7 +55,7 @@ export const TicketCard = ({
 
         {/* Monument details overlay */}
         <div className="absolute bottom-3 left-4 right-4 text-white">
-          <h4 className="text-xl font-bold font-serif leading-tight truncate">
+          <h4 className="text-xl font-extrabold font-sans leading-tight truncate">
             {monumentName}
           </h4>
           {monumentLocation && (

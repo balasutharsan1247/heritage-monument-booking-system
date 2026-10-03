@@ -3,6 +3,7 @@ const QueueEntry = require('../models/QueueEntry');
 const Monument = require('../models/Monument');
 const User = require('../models/User');
 const Wallet = require('../models/Wallet');
+const treasuryService = require('../services/treasuryService');
 const mongoose = require('mongoose');
 
 // Helper to get date boundaries
@@ -30,22 +31,28 @@ const getDateRange = (startDate, endDate) => {
 exports.getSummary = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
+    const hasDateRange = Boolean(startDate || endDate);
     const { start, end } = getDateRange(startDate, endDate);
 
+    // If date range is specified, match tickets within that range.
+    // If not specified, summarize ALL tickets (all-time) so dashboard properties reflect the whole system!
+    const matchCriteria = {
+      status: { $in: ['booked', 'used'] }
+    };
+    if (hasDateRange) {
+      matchCriteria.visitDate = { $gte: start, $lte: end };
+    }
+
     const ticketStats = await Ticket.aggregate([
-      {
-        $match: {
-          visitDate: { $gte: start, $lte: end },
-          status: { $in: ['booked', 'used'] }
-        }
-      },
+      { $match: matchCriteria },
       {
         $group: {
           _id: null,
-          totalTickets: { $sum: 1 },
+          totalTickets: { $sum: { $ifNull: ["$numberOfPeople", 1] } },
+          totalBookings: { $sum: 1 },
           totalRevenue: { $sum: "$price" },
           totalVisitors: { 
-            $sum: { $cond: [{ $eq: ["$status", "used"] }, 1, 0] } 
+            $sum: { $cond: [{ $eq: ["$status", "used"] }, { $ifNull: ["$numberOfPeople", 1] }, 0] } 
           }
         }
       }
@@ -53,6 +60,7 @@ exports.getSummary = async (req, res) => {
 
     const result = ticketStats[0] || {
       totalTickets: 0,
+      totalBookings: 0,
       totalRevenue: 0,
       totalVisitors: 0
     };
@@ -61,32 +69,64 @@ exports.getSummary = async (req, res) => {
     const allMonumentsCount = await Monument.countDocuments();
     const totalUsers = await User.countDocuments();
 
-    const validTickets = await Ticket.countDocuments({
-      visitDate: { $gte: start, $lte: end },
-      status: 'booked'
-    });
-    const usedTickets = await Ticket.countDocuments({
-      visitDate: { $gte: start, $lte: end },
-      status: 'used'
-    });
-    const cancelledTickets = await Ticket.countDocuments({
-      visitDate: { $gte: start, $lte: end },
-      status: 'cancelled'
-    });
-
-    const adminUser = await User.findOne({ role: 'admin' });
-    let treasuryBalance = 0;
-    if (adminUser) {
-      const adminWallet = await Wallet.findOne({ userId: adminUser._id });
-      if (adminWallet) {
-        treasuryBalance = adminWallet.balance;
-      }
+    const validQuery = { status: 'booked' };
+    const usedQuery = { status: 'used' };
+    const cancelledQuery = { status: 'cancelled' };
+    if (hasDateRange) {
+      validQuery.visitDate = { $gte: start, $lte: end };
+      usedQuery.visitDate = { $gte: start, $lte: end };
+      cancelledQuery.visitDate = { $gte: start, $lte: end };
     }
+
+    const validTickets = await Ticket.countDocuments(validQuery);
+    const usedTickets = await Ticket.countDocuments(usedQuery);
+    const cancelledTickets = await Ticket.countDocuments(cancelledQuery);
+
+    let treasuryBalance = 0;
+    try {
+      const treasuryWallet = await treasuryService.getOrCreateTreasuryWallet();
+      if (treasuryWallet) {
+        if (treasuryWallet.balance === 0 && result.totalRevenue > 0) {
+          await treasuryService.reconcileTreasury(req.user?.id);
+          const refreshed = await treasuryService.getOrCreateTreasuryWallet();
+          treasuryBalance = refreshed.balance;
+        } else {
+          treasuryBalance = treasuryWallet.balance;
+        }
+      }
+    } catch (treasuryErr) {
+      console.error('Error fetching treasury balance in summary:', treasuryErr);
+      treasuryBalance = result.totalRevenue;
+    }
+
+    // Also compute today's stats for granular breakdown
+    const todayBoundary = getDateRange();
+    const todayStats = await Ticket.aggregate([
+      {
+        $match: {
+          visitDate: { $gte: todayBoundary.start, $lte: todayBoundary.end },
+          status: { $in: ['booked', 'used'] }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalTickets: { $sum: { $ifNull: ["$numberOfPeople", 1] } },
+          totalBookings: { $sum: 1 },
+          totalRevenue: { $sum: "$price" },
+          totalVisitors: { 
+            $sum: { $cond: [{ $eq: ["$status", "used"] }, { $ifNull: ["$numberOfPeople", 1] }, 0] } 
+          }
+        }
+      }
+    ]);
+    const todayResult = todayStats[0] || { totalTickets: 0, totalBookings: 0, totalRevenue: 0, totalVisitors: 0 };
 
     res.json({
       success: true,
       data: {
-        totalTickets: result.totalTickets,
+        totalTickets: result.totalTickets || result.totalBookings,
+        totalBookings: result.totalBookings,
         totalRevenue: result.totalRevenue,
         treasuryBalance,
         totalVisitors: result.totalVisitors,
@@ -96,8 +136,10 @@ exports.getSummary = async (req, res) => {
         totalMonuments,
         allMonumentsCount,
         totalUsers,
+        today: todayResult,
         measured: {
-          totalTickets: result.totalTickets,
+          totalTickets: result.totalTickets || result.totalBookings,
+          totalBookings: result.totalBookings,
           totalRevenue: result.totalRevenue,
           totalVisitors: result.totalVisitors,
           validTickets,

@@ -40,7 +40,7 @@ export const PageLoader = ({ message = 'Loading Heritage Portal...' }) => {
       </div>
 
       <div className="text-center space-y-1">
-        <p className="text-sm font-bold uppercase tracking-widest text-maroon-900 font-serif">
+        <p className="text-sm font-bold uppercase tracking-widest text-maroon-900 font-sans">
           {message}
         </p>
         <p className="text-xs text-charcoal-400">

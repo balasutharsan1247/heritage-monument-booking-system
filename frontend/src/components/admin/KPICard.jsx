@@ -55,7 +55,7 @@ export const KPICard = ({
 
       <div
         className={cn(
-          'text-3xl sm:text-4xl font-black font-serif tracking-tight',
+          'text-3xl sm:text-4xl font-black font-sans tracking-tight',
           isMaroon ? 'text-white' : 'text-charcoal-900'
         )}
       >

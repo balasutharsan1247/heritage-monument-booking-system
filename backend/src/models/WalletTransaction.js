@@ -28,8 +28,26 @@ const walletTransactionSchema = new mongoose.Schema({
   },
   purpose: {
     type: String,
-    enum: ['topup', 'ticket_purchase', 'ticket_refund', 'ticket_revenue', 'ticket_refund_deduction', 'manual_debit', 'other'],
+    enum: [
+      'topup',
+      'ticket_purchase',
+      'ticket_refund',
+      'ticket_revenue',
+      'ticket_refund_deduction',
+      'manual_debit',
+      'grant',
+      'maintenance',
+      'subsidy',
+      'restoration',
+      'manual_adjustment',
+      'other',
+    ],
     default: 'topup',
+  },
+  monumentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Monument',
+    default: null,
   },
   description: {
     type: String,
@@ -45,11 +63,12 @@ const walletTransactionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['completed', 'failed', 'pending'],
+    enum: ['completed', 'failed', 'pending', 'cancelled', 'reversed'],
     default: 'completed',
   },
 }, { timestamps: true });
 
 walletTransactionSchema.index({ userId: 1, createdAt: -1 });
+walletTransactionSchema.index({ walletId: 1, createdAt: -1 });
 
 module.exports = mongoose.model('WalletTransaction', walletTransactionSchema);

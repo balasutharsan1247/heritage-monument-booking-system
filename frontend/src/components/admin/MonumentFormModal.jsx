@@ -143,13 +143,31 @@ export const MonumentFormModal = ({
             placeholder="e.g. Agra, Uttar Pradesh"
           />
 
-          <Input
-            label="Image URL or Path"
-            value={form.imageUrl}
-            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-            placeholder="e.g. /images/taj-mahal.jpg"
-            helperText="Can be a local /images/ path or public URL"
-          />
+          <div>
+            <Input
+              label="Image URL or Path"
+              value={form.imageUrl}
+              onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+              placeholder="e.g. /images/taj-mahal.jpg or https://..."
+              helperText="Local path (e.g. /images/red-fort.jpg) or HTTPS URL"
+            />
+            {form.imageUrl?.trim() && (
+              <div className="mt-2 flex items-center gap-2.5 p-2 bg-sandstone-50 border border-sandstone-200 rounded-lg">
+                <img
+                  src={form.imageUrl}
+                  alt="Preview"
+                  className="w-12 h-9 object-cover rounded border border-sandstone-300 shrink-0"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-medium text-charcoal-800">Image Preview</p>
+                  <p className="text-[10px] text-charcoal-400 truncate">{form.imageUrl}</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

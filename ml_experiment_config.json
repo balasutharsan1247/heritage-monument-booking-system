@@ -1,20 +1,76 @@
 {
   "experiment_name": "Visitor Footfall Forecasting",
-  "target_variable": "Total_Visitors",
-  "forecast_horizon": "1 period (day/hour)",
+  "model_name": "HeritageFootfallRegressor",
+  "model_version": "v1.0.0",
+  "target_column": "total_visitors",
+  "forecast_horizon": "1 day",
   "aggregation_level": "daily",
+  "dataset_path": "ml/data/daily_monument_footfall.csv",
+  "output_dir": "ml/outputs/v1",
+  "random_seed": 42,
   "monument_selection": [
-    "M001"
+    "M001",
+    "M002",
+    "M003",
+    "M004",
+    "M005"
   ],
-  "training_period": {
-    "start": "2025-01-01",
-    "end": "2025-01-01",
-    "note": "Awaiting more data. Currently only 1 day available."
+  "split_config": {
+    "strategy": "date",
+    "split_date": "2024-10-01",
+    "split_ratio": 0.8,
+    "chronological": true
   },
-  "test_period": {
-    "start": "TBD",
-    "end": "TBD",
-    "note": "Requires future data collection."
+  "baseline_config": {
+    "model_type": "previous_day",
+    "fallback_strategy": "monument_mean"
+  },
+  "proposed_model_config": {
+    "model_type": "HistGradientBoostingRegressor",
+    "fallback_model_type": "RandomForestRegressor",
+    "hyperparameters": {
+      "max_iter": 100,
+      "max_depth": 6,
+      "min_samples_leaf": 10,
+      "learning_rate": 0.1,
+      "random_state": 42
+    }
+  },
+  "feature_config": {
+    "target_column": "total_visitors",
+    "categorical_columns": [
+      "monument_id",
+      "state",
+      "city",
+      "monument_type",
+      "festival_importance",
+      "weather_condition"
+    ],
+    "numerical_columns": [
+      "year",
+      "month",
+      "day_of_week",
+      "is_weekend",
+      "is_public_holiday",
+      "school_holiday",
+      "daily_capacity",
+      "is_open",
+      "maintenance_or_closure",
+      "temperature_avg_c",
+      "rainfall_mm",
+      "visitors_previous_day",
+      "rolling_7_day_average"
+    ],
+    "excluded_columns": [
+      "record_id",
+      "total_visitors",
+      "date",
+      "monument_name",
+      "holiday_name",
+      "festival_name",
+      "data_status"
+    ],
+    "warmup_handling": "drop_incomplete_lags"
   },
   "evaluation_metrics": [
     "MAE",

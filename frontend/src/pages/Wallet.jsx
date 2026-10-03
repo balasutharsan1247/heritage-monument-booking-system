@@ -169,23 +169,68 @@ export default function Wallet() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-sandstone-200 pb-4">
         <div>
-          <h1 className="text-3xl font-bold font-serif text-charcoal-900 flex items-center gap-2.5">
+          <h1 className="text-3xl font-extrabold font-sans text-charcoal-900 flex items-center gap-2.5">
             <WalletIcon className="w-7 h-7 text-maroon-800" />
             <span>{isAdmin ? 'Central Treasury Wallet' : 'Virtual Wallet'}</span>
           </h1>
           <p className="text-xs text-charcoal-500 mt-1">
             {isAdmin 
-              ? 'Real-time revenue accumulated automatically from visitor ticket bookings. Manual top-ups are disabled for administrators.' 
+              ? 'Real-time revenue accumulated automatically from visitor ticket bookings and central treasury operations.' 
               : 'Prepaid balance for seamless monument bookings and instant refunds'}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
           {isAdmin ? (
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gold-50 border border-gold-300 text-gold-900 text-xs font-bold shadow-xs">
-              <ShieldCheck className="w-4 h-4 text-gold-700" />
-              <span>Automated Revenue Flow</span>
-            </div>
+            <>
+              <Link to="/admin/treasury">
+                <Button variant="secondary" size="sm" icon={Landmark}>
+                  Treasury Overview
+                </Button>
+              </Link>
+              <Button
+                variant="primary"
+                size="sm"
+                icon={PlusCircle}
+                onClick={() => {
+                  setTopupError('');
+                  setIsTopupOpen(true);
+                }}
+              >
+                Record Allocation
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={MinusCircle}
+                onClick={() => {
+                  setDebitError('');
+                  setIsDebitOpen(true);
+                }}
+                disabled={balance <= 0}
+              >
+                Disburse Funds
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={RotateCcw}
+                onClick={async () => {
+                  try {
+                    const res = await api.reconcileTreasury();
+                    if (res.success) {
+                      toast.success(`Treasury reconciled! Balance synced to ₹${(res.data?.currentBalance ?? 0).toLocaleString()}`);
+                      fetchWallet();
+                    }
+                  } catch {
+                    toast.error('Reconciliation failed.');
+                  }
+                }}
+                title="Audit & sync treasury balance"
+              >
+                Reconcile
+              </Button>
+            </>
           ) : (
             <>
               <Button
@@ -245,7 +290,7 @@ export default function Wallet() {
             <span className="text-[11px] uppercase tracking-wider text-sandstone-300 font-semibold block">
               {isAdmin ? 'Accumulated Ticket Revenue' : 'Available Balance'}
             </span>
-            <div data-testid="wallet-balance" className="text-4xl sm:text-5xl font-black font-serif tracking-tight text-ivory-50 mt-1">
+            <div data-testid="wallet-balance" className="text-4xl sm:text-5xl font-black font-sans tracking-tight text-ivory-50 mt-1">
               ₹{balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </div>
@@ -340,7 +385,7 @@ export default function Wallet() {
         {/* Header & Filter Tabs */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-sandstone-100 pb-4">
           <div>
-            <h2 className="text-xl font-bold font-serif text-charcoal-900">
+            <h2 className="text-xl font-extrabold font-sans text-charcoal-900">
               Transaction History
             </h2>
             <p className="text-xs text-charcoal-500 mt-0.5">
@@ -479,14 +524,16 @@ export default function Wallet() {
 
       </div>
 
-      {/* VISITOR ONLY MODALS: TOP-UP & DEBIT */}
-      {!isAdmin && (
-        <>
-          <Modal
-            isOpen={isTopupOpen}
-            onClose={() => setIsTopupOpen(false)}
-            title="Add Money to Wallet"
-        description="Choose a preset amount or enter a custom sum to deposit into your virtual wallet."
+      {/* MODALS: TOP-UP / ALLOCATION & DEBIT / DISBURSEMENT */}
+      <Modal
+        isOpen={isTopupOpen}
+        onClose={() => setIsTopupOpen(false)}
+        title={isAdmin ? "Record Treasury Allocation / Grant" : "Add Money to Wallet"}
+        description={
+          isAdmin
+            ? "Deposit capital, state grant, or preservation subsidy into the Central Treasury reserve."
+            : "Choose a preset amount or enter a custom sum to deposit into your virtual wallet."
+        }
       >
         <form onSubmit={handleTopup} className="space-y-5">
           {topupError && (
@@ -520,21 +567,21 @@ export default function Wallet() {
           </div>
 
           <Input
-            label="Custom Amount (₹)"
+            label={isAdmin ? "Allocation Sum (₹)" : "Custom Amount (₹)"}
             type="number"
             min="1"
-            max="50000"
+            max={isAdmin ? 10000000 : 50000}
             step="1"
             required
             value={topupAmount}
             onChange={(e) => setTopupAmount(e.target.value)}
-            placeholder="e.g. 500"
+            placeholder="e.g. 5000"
           />
 
           {/* Payment Method Selector */}
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-charcoal-700 block mb-2">
-              Payment Gateway
+              {isAdmin ? "Capital Transfer Channel" : "Payment Gateway"}
             </label>
             <div className="grid grid-cols-3 gap-2.5">
               {[
@@ -578,18 +625,26 @@ export default function Wallet() {
               loading={topupLoading}
               icon={PlusCircle}
             >
-              {topupLoading ? 'Processing...' : `Deposit ₹${parseFloat(topupAmount || 0).toLocaleString()}`}
+              {topupLoading 
+                ? 'Processing...' 
+                : isAdmin 
+                ? `Record ₹${parseFloat(topupAmount || 0).toLocaleString()} Allocation` 
+                : `Deposit ₹${parseFloat(topupAmount || 0).toLocaleString()}`}
             </Button>
           </div>
         </form>
       </Modal>
 
-      {/* DEBIT MODAL */}
+      {/* DEBIT / DISBURSEMENT MODAL */}
       <Modal
         isOpen={isDebitOpen}
         onClose={() => setIsDebitOpen(false)}
-        title="Debit Wallet Funds"
-        description="Withdraw or deduct money from your current wallet balance."
+        title={isAdmin ? "Disburse Treasury Maintenance Funds" : "Debit Wallet Funds"}
+        description={
+          isAdmin
+            ? "Authorize and disburse capital for monument preservation, facilities, or repairs."
+            : "Withdraw or deduct money from your current wallet balance."
+        }
       >
         <form onSubmit={handleDebit} className="space-y-4">
           {debitError && (
@@ -600,14 +655,14 @@ export default function Wallet() {
           )}
 
           <div className="bg-sandstone-50 p-3 rounded-xl border border-sandstone-200 text-xs flex justify-between items-center">
-            <span className="text-charcoal-600">Current Balance:</span>
+            <span className="text-charcoal-600">Available Treasury Reserve:</span>
             <span className="font-bold text-maroon-900 font-mono text-sm">
               ₹{balance.toLocaleString()}
             </span>
           </div>
 
           <Input
-            label="Amount to Debit (₹)"
+            label={isAdmin ? "Disbursement Amount (₹)" : "Amount to Debit (₹)"}
             type="number"
             min="1"
             max={balance}
@@ -615,15 +670,15 @@ export default function Wallet() {
             required
             value={debitAmount}
             onChange={(e) => setDebitAmount(e.target.value)}
-            placeholder="e.g. 100"
+            placeholder="e.g. 500"
           />
 
           <Input
-            label="Purpose / Note (Optional)"
+            label={isAdmin ? "Maintenance Purpose / Reference" : "Purpose / Note (Optional)"}
             type="text"
             value={debitReason}
             onChange={(e) => setDebitReason(e.target.value)}
-            placeholder="e.g. Manual Withdrawal / Payment"
+            placeholder={isAdmin ? "e.g. Qutub Minar ticket counter upkeep" : "e.g. Manual Withdrawal / Payment"}
           />
 
           <div className="pt-2 flex justify-end gap-2.5">
@@ -641,13 +696,11 @@ export default function Wallet() {
               loading={debitLoading}
               icon={MinusCircle}
             >
-              {debitLoading ? 'Debiting...' : 'Confirm Debit'}
+              {debitLoading ? 'Processing...' : isAdmin ? 'Confirm Disbursement' : 'Confirm Debit'}
             </Button>
           </div>
         </form>
       </Modal>
-      </>
-    )}
 
     </div>
   );

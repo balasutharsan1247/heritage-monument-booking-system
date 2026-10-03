@@ -7,6 +7,10 @@
     scroll-behavior: smooth;
   }
 
+  *, ::before, ::after {
+    font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
+  }
+
   body {
     background-color: #fdfbf7;
     color: #1b1b1e;
@@ -60,6 +64,24 @@
   background-size: 20px 20px;
 }
 
+.heritage-glass {
+  background-color: rgba(70, 19, 28, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(204, 165, 74, 0.22);
+}
+
+.sandstone-glass {
+  background-color: rgba(253, 251, 247, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(214, 197, 176, 0.6);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
 /* Print styling for tickets */
 @media print {
   body {
@@ -78,4 +100,15 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Dedicated Kiosk Display styling - immune to theme inheritance or cache lag */
+.kiosk-display-root {
+  background-color: #0d0d12 !important;
+  color: #ffffff !important;
+}
+
+.kiosk-display-card {
+  background-color: #16161c !important;
+  border-color: #262633 !important;
 }

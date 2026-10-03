@@ -18,6 +18,11 @@ const walletSchema = new mongoose.Schema({
     type: String,
     default: 'INR',
   },
+  isTreasury: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Wallet', walletSchema);

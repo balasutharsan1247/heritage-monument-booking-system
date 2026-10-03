@@ -3,21 +3,21 @@ import { Link, useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Landmark, Mail, Lock, User, AlertCircle, ArrowRight } from 'lucide-react';
+import { Landmark, Mail, Lock, User, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Select } from '../components/ui/Select';
 import { useToast } from '../components/ui/Toast';
+import { Logo } from '../components/layout/Logo';
 
 export default function Register() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    role: 'visitor',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -62,24 +62,24 @@ export default function Register() {
   };
 
   return (
-    <div className="max-w-sm mx-auto my-10">
-      <div className="bg-white rounded-2xl border border-sandstone-200 shadow-sm p-7 space-y-6">
+    <div className="max-w-md mx-auto my-12 px-4">
+      <div className="bg-white rounded-3xl border border-sandstone-200 shadow-heritage p-8 sm:p-9 space-y-6">
         
         {/* Header */}
-        <div className="text-center space-y-1">
-          <div className="w-10 h-10 rounded-xl bg-maroon-800 text-gold-400 flex items-center justify-center mx-auto mb-2 shadow-xs">
-            <Landmark className="w-5 h-5" />
+        <div className="text-center space-y-3">
+          <div className="flex justify-center">
+            <Logo variant="light" size="md" />
           </div>
-          <h2 className="text-2xl font-bold font-serif text-charcoal-900">
-            Create Account
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-charcoal-900 tracking-tight font-sans">
+            Create Visitor Account
           </h2>
-          <p className="text-xs text-charcoal-500">
-            Register for online monument reservations
+          <p className="text-xs text-charcoal-500 max-w-xs mx-auto">
+            Register to reserve national heritage monuments and bypass ticket queues
           </p>
         </div>
 
         {error && (
-          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold flex items-center gap-2">
+          <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold flex items-center gap-2.5">
             <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
             <span>{error}</span>
           </div>
@@ -97,7 +97,7 @@ export default function Register() {
           />
 
           <Input
-            label="Email"
+            label="Email Address"
             type="email"
             required
             icon={Mail}
@@ -106,39 +106,32 @@ export default function Register() {
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           />
 
-          <Select
-            label="Role"
-            value={formData.role}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-            options={[
-              { value: 'visitor', label: 'Visitor' },
-              { value: 'staff', label: 'Staff' },
-              { value: 'admin', label: 'Admin' },
-            ]}
-          />
-
           <Input
             label="Password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             required
             icon={Lock}
+            rightIcon={showPassword ? EyeOff : Eye}
+            onRightIconClick={() => setShowPassword(!showPassword)}
             placeholder="••••••••"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           />
 
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            fullWidth
-            loading={loading}
-            icon={ArrowRight}
-            iconPosition="right"
-            className="mt-2"
-          >
-            {loading ? 'Creating...' : 'Register'}
-          </Button>
+          <div className="pt-2">
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={loading}
+              icon={ArrowRight}
+              iconPosition="right"
+              className="py-3 font-semibold shadow-xs"
+            >
+              {loading ? 'Creating account...' : 'Create Account'}
+            </Button>
+          </div>
         </form>
 
         <div className="relative">
@@ -146,7 +139,7 @@ export default function Register() {
             <div className="w-full border-t border-sandstone-200"></div>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="px-2 bg-white text-charcoal-400">or</span>
+            <span className="px-3 bg-white text-charcoal-400 font-medium">or continue with</span>
           </div>
         </div>
 
@@ -155,7 +148,7 @@ export default function Register() {
             onSuccess={handleGoogleSuccess}
             onError={() => setError('Google sign-in failed')}
             shape="pill"
-            width="100%"
+            width="320"
           />
         </div>
 

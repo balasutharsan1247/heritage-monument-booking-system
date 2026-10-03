@@ -15,7 +15,9 @@ export function useQueueSocket(monumentId, onQueueUpdated) {
     if (!monumentId) return;
 
     const socket = io(SOCKET_URL, {
-      transports: ['websocket', 'polling']
+      transports: ['polling', 'websocket'],
+      reconnectionAttempts: 5,
+      timeout: 10000
     });
 
     socket.on('connect', () => {

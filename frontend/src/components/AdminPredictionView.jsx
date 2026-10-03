@@ -25,6 +25,9 @@ const AdminPredictionView = () => {
   const [error, setError] = useState(null);
   const [errorType, setErrorType] = useState(null);
 
+  const [minDate, setMinDate] = useState('');
+  const [maxDate, setMaxDate] = useState('');
+
   // Fetch monuments on load
   useEffect(() => {
     const fetchMonuments = async () => {
@@ -39,7 +42,14 @@ const AdminPredictionView = () => {
       }
     };
     
-    // Set default date to tomorrow
+    // Set default date to tomorrow and calculate allowed range (today to today + 30 days)
+    const today = new Date();
+    setMinDate(today.toISOString().split('T')[0]);
+
+    const max = new Date(today);
+    max.setDate(max.getDate() + 30);
+    setMaxDate(max.toISOString().split('T')[0]);
+
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     setSelectedDate(tomorrow.toISOString().split('T')[0]);
@@ -94,12 +104,23 @@ const AdminPredictionView = () => {
     }
   };
 
+  const getMetricsDisplay = (data) => {
+    const metrics = data?.metrics || data?.evaluationMetrics || {};
+    const mae = metrics.mae !== null && metrics.mae !== undefined && !isNaN(metrics.mae)
+      ? Number(metrics.mae).toFixed(2)
+      : 'N/A';
+    const rmse = metrics.rmse !== null && metrics.rmse !== undefined && !isNaN(metrics.rmse)
+      ? Number(metrics.rmse).toFixed(2)
+      : 'N/A';
+    return { mae, rmse };
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-sandstone-200">
         <div>
-          <h1 className="text-3xl font-black text-charcoal-900 font-serif tracking-tight flex items-center gap-2.5">
+          <h1 className="text-3xl font-black text-charcoal-900 font-sans tracking-tight flex items-center gap-2.5">
             <TrendingUp className="w-7 h-7 text-maroon-800" />
             <span>Visitor Footfall Prediction</span>
           </h1>
@@ -143,6 +164,8 @@ const AdminPredictionView = () => {
             <input 
               type="date"
               value={selectedDate}
+              min={minDate}
+              max={maxDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               className="w-full rounded-xl border-sandstone-300 border bg-white px-4 py-3 text-sm text-charcoal-900 focus:ring-2 focus:ring-maroon-600/20 focus:border-maroon-700 transition-all outline-none"
               required
@@ -199,7 +222,7 @@ const AdminPredictionView = () => {
                 <div className="flex items-center gap-1.5 text-gold-400 text-xs font-bold uppercase tracking-widest mb-2">
                   <Sparkles className="w-3.5 h-3.5" /> Expected Footfall
                 </div>
-                <h2 className="text-5xl font-black font-serif tracking-tight mb-2 text-ivory-50">
+                <h2 className="text-5xl font-black font-sans tracking-tight mb-2 text-ivory-50">
                   {predictionData.predictedVisitorCount.toLocaleString()}
                 </h2>
                 <div className="text-xs text-sandstone-300 font-medium">Estimated daily visitor attendance</div>
@@ -214,12 +237,12 @@ const AdminPredictionView = () => {
             {/* Metrics & Telemetry Card */}
             <div className="lg:col-span-2 bg-white rounded-3xl border border-sandstone-200 shadow-sm p-7 flex flex-col justify-between">
               <div>
-                <h3 className="text-base font-bold font-serif text-charcoal-900 mb-6 flex items-center gap-2">
+                <h3 className="text-base font-bold font-sans text-charcoal-900 mb-6 flex items-center gap-2">
                   <Activity className="w-5 h-5 text-maroon-800" />
                   Model Telemetry
                 </h3>
                 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                   <div className="space-y-1">
                     <p className="text-[11px] text-charcoal-500 font-bold uppercase tracking-wider">Model</p>
                     <p className="font-bold text-charcoal-900 truncate text-sm" title={`${predictionData.modelName} ${predictionData.modelVersion}`}>
@@ -229,29 +252,22 @@ const AdminPredictionView = () => {
                   
                   <div className="space-y-1">
                     <p className="text-[11px] text-charcoal-500 font-bold uppercase tracking-wider">MAE</p>
-                    <p className="font-bold text-charcoal-900 text-sm font-mono">{predictionData.metrics.mae.toFixed(2)}</p>
+                    <p className="font-bold text-charcoal-900 text-sm font-mono">{getMetricsDisplay(predictionData).mae}</p>
                   </div>
                   
                   <div className="space-y-1">
                     <p className="text-[11px] text-charcoal-500 font-bold uppercase tracking-wider">RMSE</p>
-                    <p className="font-bold text-charcoal-900 text-sm font-mono">{predictionData.metrics.rmse.toFixed(2)}</p>
-                  </div>
-
-                  <div className="space-y-1">
-                    <p className="text-[11px] text-charcoal-500 font-bold uppercase tracking-wider">Data Quality</p>
-                    <span className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-full border ${getStatusColor(predictionData.dataQualityStatus)}`}>
-                      {predictionData.dataQualityStatus}
-                    </span>
+                    <p className="font-bold text-charcoal-900 text-sm font-mono">{getMetricsDisplay(predictionData).rmse}</p>
                   </div>
                 </div>
               </div>
 
               <div className="mt-6 pt-5 border-t border-sandstone-100">
-                <div className="space-y-1">
-                  <p className="text-[11px] text-charcoal-500 font-bold uppercase tracking-wider">Training Date Range</p>
-                  <p className="text-xs font-medium text-charcoal-700">
-                    {new Date(predictionData.trainingDateRange.start).toLocaleDateString()} — {new Date(predictionData.trainingDateRange.end).toLocaleDateString()}
-                  </p>
+                <div className="space-y-2">
+                  <p className="text-[11px] text-charcoal-500 font-bold uppercase tracking-wider">Data Quality</p>
+                  <div className={`p-4 rounded-2xl border text-xs sm:text-sm font-medium leading-relaxed ${getStatusColor(predictionData.dataQualityStatus)}`}>
+                    {predictionData.dataQualityStatus}
+                  </div>
                 </div>
               </div>
             </div>

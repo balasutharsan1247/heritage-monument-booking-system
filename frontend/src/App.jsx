@@ -118,6 +118,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="admin/treasury"
+                  element={
+                    <ProtectedRoute roles={['admin']}>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="admin/queues"
                   element={
                     <ProtectedRoute roles={['admin']}>
@@ -127,6 +135,22 @@ function App() {
                 />
                 <Route
                   path="admin/predictions"
+                  element={
+                    <ProtectedRoute roles={['admin']}>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="admin/users"
+                  element={
+                    <ProtectedRoute roles={['admin']}>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="admin/rbac"
                   element={
                     <ProtectedRoute roles={['admin']}>
                       <AdminDashboard />

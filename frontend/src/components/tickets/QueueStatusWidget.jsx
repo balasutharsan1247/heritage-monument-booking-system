@@ -56,7 +56,7 @@ export const QueueStatusWidget = ({ queueStatus, tokenNumber }) => {
                 <Users className="w-3 h-3 text-maroon-700" />
                 <span>People Ahead</span>
               </div>
-              <div className="text-2xl font-black font-serif text-maroon-900">
+              <div className="text-2xl font-black font-sans text-maroon-900">
                 {queueStatus.entriesAhead ?? 0}
               </div>
             </div>
@@ -66,7 +66,7 @@ export const QueueStatusWidget = ({ queueStatus, tokenNumber }) => {
                 <Clock className="w-3 h-3 text-maroon-700" />
                 <span>Est. Wait</span>
               </div>
-              <div className="text-2xl font-black font-serif text-charcoal-900">
+              <div className="text-2xl font-black font-sans text-charcoal-900">
                 {queueStatus.estimatedWait ?? 0}
                 <span className="text-xs font-normal text-charcoal-500 ml-1">min</span>
               </div>

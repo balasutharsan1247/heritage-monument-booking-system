@@ -55,7 +55,7 @@ export const Modal = ({
           <div className="flex items-center justify-between p-6 pb-4 border-b border-sandstone-200/80 bg-sandstone-50/50">
             <div>
               {title && (
-                <h3 id="modal-title" className="text-xl font-bold text-charcoal-900 font-serif">
+                <h3 id="modal-title" className="text-xl font-bold text-charcoal-900 font-sans">
                   {title}
                 </h3>
               )}

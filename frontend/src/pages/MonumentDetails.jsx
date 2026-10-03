@@ -88,11 +88,11 @@ export default function MonumentDetails() {
 
           <div className="absolute bottom-5 left-6 right-6 text-white space-y-1">
             <StatusBadge type="monument" status={monument.isActive} />
-            <h1 className="text-3xl sm:text-4xl font-bold font-serif text-white tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-extrabold font-sans text-white tracking-tight">
               {monument.name}
             </h1>
             <div className="flex items-center gap-1.5 text-sandstone-200 text-xs sm:text-sm">
-              <MapPin className="w-3.5 h-3.5 text-gold-400" />
+              <MapPin className="w-3.5 h-3.5 text-amber-400" />
               <span>{monument.location}</span>
             </div>
           </div>
@@ -104,18 +104,18 @@ export default function MonumentDetails() {
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
             <div className="bg-sandstone-50 rounded-2xl p-4 border border-sandstone-200">
-              <span className="text-[11px] font-semibold text-charcoal-500 uppercase tracking-wider block">Entry Fee</span>
-              <span className="text-2xl font-bold font-serif text-maroon-900 mt-1 block">₹{monument.baseTicketPrice}</span>
+              <span className="text-[11px] font-bold text-charcoal-500 uppercase tracking-wider block">Entry Fee</span>
+              <span className="text-2xl font-extrabold font-sans text-maroon-900 mt-1 block">₹{monument.baseTicketPrice}</span>
             </div>
 
             <div className="bg-sandstone-50 rounded-2xl p-4 border border-sandstone-200">
-              <span className="text-[11px] font-semibold text-charcoal-500 uppercase tracking-wider block">Hours</span>
+              <span className="text-[11px] font-bold text-charcoal-500 uppercase tracking-wider block">Hours</span>
               <span className="text-sm font-bold text-charcoal-800 mt-1 block font-mono">{monument.openingTime} – {monument.closingTime}</span>
             </div>
 
             <div className="bg-sandstone-50 rounded-2xl p-4 border border-sandstone-200">
-              <span className="text-[11px] font-semibold text-charcoal-500 uppercase tracking-wider block">Capacity</span>
-              <span className="text-2xl font-bold font-serif text-charcoal-900 mt-1 block">{monument.capacity}</span>
+              <span className="text-[11px] font-bold text-charcoal-500 uppercase tracking-wider block">Capacity</span>
+              <span className="text-2xl font-extrabold font-sans text-charcoal-900 mt-1 block">{monument.capacity}</span>
             </div>
 
             <div className="bg-sandstone-50 rounded-2xl p-4 border border-sandstone-200">

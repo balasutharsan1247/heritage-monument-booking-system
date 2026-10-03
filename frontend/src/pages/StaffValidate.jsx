@@ -26,12 +26,17 @@ import {
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { useToast } from '../components/ui/Toast';
+import { useAuth } from '../context/AuthContext';
 
 export default function StaffValidate() {
+  const { user } = useAuth();
+  const isStaff = user?.role === 'staff';
+  const assignedMonumentId = user?.assignedMonument?._id || (typeof user?.assignedMonument === 'string' ? user?.assignedMonument : null);
+
   const [activeTab, setActiveTab] = useState('camera'); // 'camera' or 'manual'
   const [qrData, setQrData] = useState('');
   const [monuments, setMonuments] = useState([]);
-  const [selectedMonument, setSelectedMonument] = useState('');
+  const [selectedMonument, setSelectedMonument] = useState(assignedMonumentId || '');
   const [autoMark, setAutoMark] = useState(false); // default to inspect & verify first
 
   // Ticket Mark Popup State
@@ -56,12 +61,18 @@ export default function StaffValidate() {
   const toast = useToast();
 
   useEffect(() => {
-    api.getMonuments().then((res) => {
-      if (res.success) {
-        setMonuments(res.data.monuments || res.data || []);
+    if (isStaff) {
+      if (assignedMonumentId) {
+        setSelectedMonument(assignedMonumentId);
       }
-    });
-  }, []);
+    } else {
+      api.getMonuments().then((res) => {
+        if (res.success) {
+          setMonuments(res.data.monuments || res.data || []);
+        }
+      });
+    }
+  }, [isStaff, assignedMonumentId]);
 
   // Cleanup scanner on unmount
   useEffect(() => {
@@ -311,7 +322,7 @@ export default function StaffValidate() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-sandstone-200 pb-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold font-serif text-charcoal-900 flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold font-sans text-charcoal-900 flex items-center gap-2">
             <ScanLine className="w-6 h-6 text-maroon-800" />
             <span>Ticket Validator</span>
           </h1>
@@ -337,25 +348,62 @@ export default function StaffValidate() {
         </div>
       </div>
 
-      {/* Monument Selection Bar */}
-      <div className="bg-white rounded-2xl border border-sandstone-200 p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Landmark className="w-4 h-4 text-maroon-800" />
-          <span className="text-xs font-bold text-charcoal-800">Gate / Monument Check:</span>
+      {/* Monument Selection Bar or Locked Station Bar */}
+      {isStaff ? (
+        assignedMonumentId ? (
+          <div className="bg-white rounded-2xl border border-sandstone-200 p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-maroon-800/10 text-maroon-800 flex items-center justify-center shrink-0">
+                <Landmark className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-charcoal-500 block">
+                  Station Gate Allocation
+                </span>
+                <span className="text-sm font-bold text-charcoal-900 block font-sans">
+                  {user?.assignedMonument?.name || 'Allocated Monument'}
+                </span>
+                {user?.assignedMonument?.location && (
+                  <span className="text-xs text-charcoal-500 block">
+                    {user.assignedMonument.location}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold self-start sm:self-auto">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Gate Station Locked</span>
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+            <div>
+              <span className="font-bold block">No Monument Station Allocated</span>
+              <span>You are not currently allocated to any monument site. Please contact an administrator to assign your gate before validating passes.</span>
+            </div>
+          </div>
+        )
+      ) : (
+        <div className="bg-white rounded-2xl border border-sandstone-200 p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Landmark className="w-4 h-4 text-maroon-800" />
+            <span className="text-xs font-bold text-charcoal-800">Gate / Monument Check (Admin):</span>
+          </div>
+          <select
+            value={selectedMonument}
+            onChange={(e) => setSelectedMonument(e.target.value)}
+            className="p-2 border border-sandstone-300 rounded-xl bg-sandstone-50 text-charcoal-900 text-xs font-semibold focus:outline-none focus:border-maroon-700 cursor-pointer max-w-xs"
+          >
+            <option value="">Auto-Detect from Pass</option>
+            {monuments.map((m) => (
+              <option key={m._id} value={m._id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
         </div>
-        <select
-          value={selectedMonument}
-          onChange={(e) => setSelectedMonument(e.target.value)}
-          className="p-2 border border-sandstone-300 rounded-xl bg-sandstone-50 text-charcoal-900 text-xs font-semibold focus:outline-none focus:border-maroon-700 cursor-pointer max-w-xs"
-        >
-          <option value="">Auto-Detect from Pass</option>
-          {monuments.map((m) => (
-            <option key={m._id} value={m._id}>
-              {m.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      )}
 
       {/* Main Scanner Box */}
       <div className="bg-white rounded-3xl border border-sandstone-200 shadow-sm overflow-hidden">
@@ -410,7 +458,7 @@ export default function StaffValidate() {
                     <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mx-auto text-gold-400">
                       <QrCode className="w-8 h-8" />
                     </div>
-                    <h3 className="font-serif font-bold text-lg text-white">
+                    <h3 className="font-sans font-extrabold text-lg text-white">
                       Camera Scanner Ready
                     </h3>
                     <p className="text-xs text-sandstone-300 max-w-xs mx-auto">
@@ -714,7 +762,7 @@ export default function StaffValidate() {
               </div>
 
               <div>
-                <h3 className="text-xl font-bold font-serif text-charcoal-900">
+                <h3 className="text-xl font-extrabold font-sans text-charcoal-900">
                   {admittedRecord.numberOfPeople && admittedRecord.numberOfPeople > 1
                     ? `Group Admitted (${admittedRecord.numberOfPeople} Visitors)`
                     : 'Visitor Admitted!'}
@@ -753,7 +801,7 @@ export default function StaffValidate() {
               </div>
 
               <div>
-                <h3 className="text-lg font-bold font-serif text-charcoal-900">
+                <h3 className="text-lg font-extrabold font-sans text-charcoal-900">
                   Admission Denied
                 </h3>
                 <p className="text-xs text-red-700 mt-1 max-w-xs mx-auto">

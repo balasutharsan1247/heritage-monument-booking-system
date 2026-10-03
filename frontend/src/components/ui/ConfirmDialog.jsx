@@ -28,7 +28,7 @@ export const ConfirmDialog = ({
         </div>
 
         <div>
-          <h3 className="text-lg font-bold text-charcoal-900 font-serif">
+          <h3 className="text-lg font-bold text-charcoal-900 font-sans">
             {title}
           </h3>
           <p className="text-sm text-charcoal-600 mt-2 leading-relaxed">

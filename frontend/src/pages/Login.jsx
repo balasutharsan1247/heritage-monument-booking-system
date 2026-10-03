@@ -3,16 +3,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Landmark, Mail, Lock, AlertCircle, ArrowRight } from 'lucide-react';
+import { Landmark, Mail, Lock, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { useToast } from '../components/ui/Toast';
+import { Logo } from '../components/layout/Logo';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -58,24 +60,24 @@ export default function Login() {
   };
 
   return (
-    <div className="max-w-sm mx-auto my-10">
-      <div className="bg-white rounded-2xl border border-sandstone-200 shadow-sm p-7 space-y-6">
+    <div className="max-w-md mx-auto my-12 px-4">
+      <div className="bg-white rounded-3xl border border-sandstone-200 shadow-heritage p-8 sm:p-9 space-y-6">
         
         {/* Header */}
-        <div className="text-center space-y-1">
-          <div className="w-10 h-10 rounded-xl bg-maroon-800 text-gold-400 flex items-center justify-center mx-auto mb-2 shadow-xs">
-            <Landmark className="w-5 h-5" />
+        <div className="text-center space-y-3">
+          <div className="flex justify-center">
+            <Logo variant="light" size="md" />
           </div>
-          <h2 className="text-2xl font-bold font-serif text-charcoal-900">
-            Sign In
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-charcoal-900 tracking-tight font-sans">
+            Sign In to Account
           </h2>
-          <p className="text-xs text-charcoal-500">
-            Access your bookings and queue tokens
+          <p className="text-xs text-charcoal-500 max-w-xs mx-auto">
+            Access your reserved monument passes, virtual queue tokens, and wallet balance
           </p>
         </div>
 
         {error && (
-          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold flex items-center gap-2">
+          <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold flex items-center gap-2.5">
             <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
             <span>{error}</span>
           </div>
@@ -83,7 +85,7 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="Email"
+            label="Email Address"
             type="email"
             required
             icon={Mail}
@@ -94,25 +96,30 @@ export default function Login() {
 
           <Input
             label="Password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             required
             icon={Lock}
+            rightIcon={showPassword ? EyeOff : Eye}
+            onRightIconClick={() => setShowPassword(!showPassword)}
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            fullWidth
-            loading={loading}
-            icon={ArrowRight}
-            iconPosition="right"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </Button>
+          <div className="pt-1">
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={loading}
+              icon={ArrowRight}
+              iconPosition="right"
+              className="py-3 font-semibold shadow-xs"
+            >
+              {loading ? 'Authenticating...' : 'Sign In'}
+            </Button>
+          </div>
         </form>
 
         <div className="relative">
@@ -120,7 +127,7 @@ export default function Login() {
             <div className="w-full border-t border-sandstone-200"></div>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="px-2 bg-white text-charcoal-400">or</span>
+            <span className="px-3 bg-white text-charcoal-400 font-medium">or continue with</span>
           </div>
         </div>
 
@@ -129,14 +136,14 @@ export default function Login() {
             onSuccess={handleGoogleSuccess}
             onError={() => setError('Google sign-in failed')}
             shape="pill"
-            width="100%"
+            width="320"
           />
         </div>
 
         <div className="text-center pt-2 border-t border-sandstone-100 text-xs text-charcoal-600">
           <span>Don't have an account? </span>
           <Link to="/register" className="font-bold text-maroon-800 hover:underline">
-            Register
+            Register Account
           </Link>
         </div>
 

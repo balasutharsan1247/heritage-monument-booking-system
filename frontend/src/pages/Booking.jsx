@@ -152,7 +152,7 @@ export default function Booking() {
 
       {/* Header */}
       <div className="border-b border-sandstone-200 pb-3">
-        <h1 className="text-2xl sm:text-3xl font-bold font-serif text-charcoal-900">
+        <h1 className="text-2xl sm:text-3xl font-extrabold font-sans text-charcoal-900">
           Book Entry Tickets
         </h1>
         <p className="text-xs text-charcoal-500 mt-0.5">
@@ -175,11 +175,34 @@ export default function Booking() {
           <form onSubmit={handleSubmit} className="space-y-6">
             
             {/* Visit Date */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-charcoal-700 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-maroon-800" />
-                Visit Date
-              </label>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold uppercase tracking-wider text-charcoal-700 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-maroon-800" />
+                  Visit Date
+                </label>
+                {/* Quick Date Pills */}
+                <div className="flex items-center gap-1.5 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setDate(today)}
+                    className="px-2 py-0.5 rounded-md bg-sandstone-100 hover:bg-amber-100 text-charcoal-700 font-bold transition-colors cursor-pointer"
+                  >
+                    Today
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const tom = new Date();
+                      tom.setDate(tom.getDate() + 1);
+                      setDate(tom.toISOString().split('T')[0]);
+                    }}
+                    className="px-2 py-0.5 rounded-md bg-sandstone-100 hover:bg-amber-100 text-charcoal-700 font-bold transition-colors cursor-pointer"
+                  >
+                    Tomorrow
+                  </button>
+                </div>
+              </div>
               <input
                 type="date"
                 value={date}

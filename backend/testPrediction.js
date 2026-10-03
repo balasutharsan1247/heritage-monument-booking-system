@@ -15,31 +15,36 @@ async function runTests() {
     await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/heritage_test_predictions');
     console.log('Connected to Test DB');
 
-    await User.deleteMany({});
-    await Monument.deleteMany({});
-    await Ticket.deleteMany({});
+    await User.deleteMany({ email: /@testpred\.local$/ });
+    await Monument.deleteMany({ name: { $in: ['Prediction Monument', 'Empty Monument'] } });
 
     server = app.listen(PORT, () => console.log(`Test server running on port ${PORT}`));
     const baseUrl = `http://localhost:${PORT}/api`;
 
-    // Register users
-    const adminRes = await fetch(`${baseUrl}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'Admin Pred', email: 'adminpred@example.com', password: 'password123', role: 'admin' })
-    });
-    const adminData = await adminRes.json();
-    const adminToken = adminData.data.token;
-    const adminUserId = adminData.data._id;
+    const jwt = require('jsonwebtoken');
+    const bcrypt = require('bcryptjs');
 
-    const visitorRes = await fetch(`${baseUrl}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'Visitor Pred', email: 'visitorpred@example.com', password: 'password123', role: 'visitor' })
+    // Create test admin and visitor
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash('password123', salt);
+
+    const adminUser = await User.create({
+      name: 'Admin Pred',
+      email: 'admin@testpred.local',
+      passwordHash,
+      role: 'admin'
     });
-    const visitorData = await visitorRes.json();
-    const visitorToken = visitorData.data.token;
-    const visitorUserId = visitorData.data._id;
+    const adminUserId = adminUser._id.toString();
+    const adminToken = jwt.sign({ id: adminUserId, role: 'admin' }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '1d' });
+
+    const visitorUser = await User.create({
+      name: 'Visitor Pred',
+      email: 'visitor@testpred.local',
+      passwordHash,
+      role: 'visitor'
+    });
+    const visitorUserId = visitorUser._id.toString();
+    const visitorToken = jwt.sign({ id: visitorUserId, role: 'visitor' }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '1d' });
 
     // Create Monuments
     const monument = await Monument.create({
@@ -163,6 +168,8 @@ async function runTests() {
     if (originalPredictVisitorCount) {
       modelService.predictVisitorCount = originalPredictVisitorCount;
     }
+    await User.deleteMany({ email: /@testpred\.local$/ }).catch(() => {});
+    await Monument.deleteMany({ name: { $in: ['Prediction Monument', 'Empty Monument'] } }).catch(() => {});
     if (server) server.close();
     await mongoose.connection.close();
     process.exit(0);

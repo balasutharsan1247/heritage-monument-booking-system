@@ -4,6 +4,7 @@ const QueueEntry = require('../models/QueueEntry');
 const Wallet = require('../models/Wallet');
 const WalletTransaction = require('../models/WalletTransaction');
 const User = require('../models/User');
+const treasuryService = require('../services/treasuryService');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 
@@ -88,35 +89,6 @@ const bookTicket = async (req, res) => {
       });
     }
 
-    // Automatically increase Admin Treasury Wallet with booking revenue
-    if (totalCost > 0) {
-      try {
-        const adminUser = await User.findOne({ role: 'admin' });
-        if (adminUser) {
-          const adminWallet = await Wallet.findOneAndUpdate(
-            { userId: adminUser._id },
-            { $inc: { balance: totalCost } },
-            { new: true, upsert: true }
-          );
-
-          await WalletTransaction.create({
-            userId: adminUser._id,
-            walletId: adminWallet._id,
-            type: 'credit',
-            amount: totalCost,
-            balanceAfter: adminWallet.balance,
-            purpose: 'ticket_revenue',
-            referenceId: req.user.id.toString(),
-            description: `Revenue from visitor for ${monument.name} (${quantity} ticket${quantity > 1 ? 's' : ''})`,
-            paymentMethod: paymentMethod === 'wallet' ? 'Virtual Wallet' : 'Direct Gateway',
-            status: 'completed',
-          });
-        }
-      } catch (adminWalletErr) {
-        console.error('Error crediting admin wallet:', adminWalletErr);
-      }
-    }
-
     // Create a SINGLE BULK TICKET for the party
     const tokenNumber = `${monument.name.substring(0, 3).toUpperCase()}-${Date.now().toString().slice(-6)}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
     
@@ -142,6 +114,35 @@ const bookTicket = async (req, res) => {
     
     ticket.qrCodeData = jwt.sign(validationPayload, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' });
     await ticket.save();
+    await ticket.populate('monumentId', 'name location imageUrl');
+
+    // Automatically credit Central Treasury Wallet with booking revenue
+    if (totalCost > 0) {
+      try {
+        const treasuryWallet = await treasuryService.getOrCreateTreasuryWallet();
+        const updatedTreasury = await Wallet.findByIdAndUpdate(
+          treasuryWallet._id,
+          { $inc: { balance: totalCost } },
+          { new: true }
+        );
+
+        await WalletTransaction.create({
+          userId: treasuryWallet.userId,
+          walletId: treasuryWallet._id,
+          type: 'credit',
+          amount: totalCost,
+          balanceAfter: updatedTreasury ? updatedTreasury.balance : (treasuryWallet.balance + totalCost),
+          purpose: 'ticket_revenue',
+          referenceId: ticket._id.toString(),
+          monumentId: monument._id,
+          description: `Revenue from visitor ticket booking: ${ticket.tokenNumber} (${monument.name})`,
+          paymentMethod: paymentMethod === 'wallet' ? 'Virtual Wallet' : 'Direct Booking Gateway',
+          status: 'completed',
+        });
+      } catch (adminWalletErr) {
+        console.error('Error crediting central treasury wallet:', adminWalletErr);
+      }
+    }
 
     // Create a single QueueEntry for the entire group
     const queueEntry = new QueueEntry({
@@ -191,7 +192,7 @@ const bookTicket = async (req, res) => {
 
 const getMyTickets = async (req, res) => {
   try {
-    const tickets = await Ticket.find({ visitorId: req.user.id }).populate('monumentId', 'name location');
+    const tickets = await Ticket.find({ visitorId: req.user.id }).populate('monumentId', 'name location imageUrl');
     const formattedTickets = tickets.map(t => ({
       _id: t._id,
       monumentId: t.monumentId,
@@ -212,7 +213,7 @@ const getMyTickets = async (req, res) => {
 
 const getTicket = async (req, res) => {
   try {
-    const ticket = await Ticket.findOne({ _id: req.params.id, visitorId: req.user.id }).populate('monumentId', 'name location');
+    const ticket = await Ticket.findOne({ _id: req.params.id, visitorId: req.user.id }).populate('monumentId', 'name location imageUrl');
     
     if (!ticket) {
       return res.status(404).json({ success: false, message: 'Ticket not found' });
@@ -284,23 +285,24 @@ const cancelTicket = async (req, res) => {
           status: 'completed',
         });
 
-        // Deduct refunded amount from Admin Treasury Wallet
-        const adminUser = await User.findOne({ role: 'admin' });
-        if (adminUser) {
-          const adminWallet = await Wallet.findOneAndUpdate(
-            { userId: adminUser._id },
+        // Deduct refunded amount from Central Treasury Wallet
+        const treasuryWallet = await treasuryService.getOrCreateTreasuryWallet();
+        if (treasuryWallet) {
+          const updatedTreasury = await Wallet.findByIdAndUpdate(
+            treasuryWallet._id,
             { $inc: { balance: -ticket.price } },
-            { new: true, upsert: true }
+            { new: true }
           );
 
           await WalletTransaction.create({
-            userId: adminUser._id,
-            walletId: adminWallet._id,
+            userId: treasuryWallet.userId,
+            walletId: treasuryWallet._id,
             type: 'debit',
             amount: ticket.price,
-            balanceAfter: adminWallet.balance,
+            balanceAfter: updatedTreasury ? updatedTreasury.balance : Math.max(0, treasuryWallet.balance - ticket.price),
             purpose: 'ticket_refund_deduction',
             referenceId: ticket._id.toString(),
+            monumentId: ticket.monumentId?._id || ticket.monumentId || null,
             description: `Refund payout for Ticket #${ticket.tokenNumber}`,
             paymentMethod: 'Virtual Wallet',
             status: 'completed',

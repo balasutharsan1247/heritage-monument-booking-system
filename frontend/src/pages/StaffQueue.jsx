@@ -5,8 +5,12 @@ import {
   CheckCircle2, 
   SkipForward, 
   Play, 
-  Clock 
+  Clock,
+  Landmark,
+  AlertCircle,
+  ShieldCheck
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { useQueueSocket } from '../hooks/useQueueSocket';
 import SocketStatus from '../components/SocketStatus';
 import { Button } from '../components/ui/Button';
@@ -14,8 +18,12 @@ import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { useToast } from '../components/ui/Toast';
 
 export default function StaffQueue() {
+  const { user } = useAuth();
+  const isStaff = user?.role === 'staff';
+  const assignedMonumentId = user?.assignedMonument?._id || (typeof user?.assignedMonument === 'string' ? user?.assignedMonument : null);
+
   const [monuments, setMonuments] = useState([]);
-  const [selectedMonument, setSelectedMonument] = useState('');
+  const [selectedMonument, setSelectedMonument] = useState(assignedMonumentId || '');
   const [queue, setQueue] = useState(null);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -48,16 +56,22 @@ export default function StaffQueue() {
   });
 
   useEffect(() => {
-    api.getMonuments().then((res) => {
-      if (res.success) {
-        const list = res.data.monuments || res.data || [];
-        setMonuments(list);
-        if (list.length > 0 && !selectedMonument) {
-          setSelectedMonument(list[0]._id);
-        }
+    if (isStaff) {
+      if (assignedMonumentId) {
+        setSelectedMonument(assignedMonumentId);
       }
-    });
-  }, []);
+    } else {
+      api.getMonuments().then((res) => {
+        if (res.success) {
+          const list = res.data.monuments || res.data || [];
+          setMonuments(list);
+          if (list.length > 0 && !selectedMonument) {
+            setSelectedMonument(list[0]._id);
+          }
+        }
+      });
+    }
+  }, [isStaff, assignedMonumentId]);
 
   useEffect(() => {
     if (selectedMonument) {
@@ -100,7 +114,7 @@ export default function StaffQueue() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-sandstone-200 gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold font-serif text-charcoal-900 flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold font-sans text-charcoal-900 flex items-center gap-2">
             <Users className="w-6 h-6 text-maroon-800" />
             <span>Staff Queue Operations</span>
           </h1>
@@ -111,32 +125,77 @@ export default function StaffQueue() {
         )}
       </div>
 
-      {/* Monument Selector */}
-      <div className="bg-white p-4 rounded-2xl border border-sandstone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex-1 max-w-sm">
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-charcoal-600 mb-1">
-            Monument
-          </label>
-          <select
-            value={selectedMonument}
-            onChange={(e) => setSelectedMonument(e.target.value)}
-            className="w-full p-2.5 border border-sandstone-300 rounded-xl bg-white text-charcoal-900 font-semibold text-sm focus:outline-none focus:border-maroon-700 cursor-pointer"
-          >
-            <option value="">Select Monument...</option>
-            {monuments.map((m) => (
-              <option key={m._id} value={m._id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* Monument Allocation Display or Admin Selector */}
+      {isStaff ? (
+        assignedMonumentId ? (
+          <div className="bg-white p-4 rounded-2xl border border-sandstone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-maroon-800/10 text-maroon-800 flex items-center justify-center shrink-0">
+                <Landmark className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-charcoal-500 block">
+                  Allocated Station
+                </span>
+                <span className="text-base font-bold text-charcoal-900 font-sans block">
+                  {user?.assignedMonument?.name || 'Allocated Monument'}
+                </span>
+                {user?.assignedMonument?.location && (
+                  <span className="text-xs text-charcoal-500 block">
+                    {user.assignedMonument.location}
+                  </span>
+                )}
+              </div>
+            </div>
 
-        {queue && (
-          <div className="text-xs text-charcoal-600 font-semibold bg-sandstone-50 px-3 py-2 rounded-xl border border-sandstone-200 self-start sm:self-auto">
-            {queue.waiting?.length || 0} Waiting in Queue
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Station Locked</span>
+              </span>
+              {queue && (
+                <div className="text-xs text-charcoal-600 font-semibold bg-sandstone-50 px-3 py-2 rounded-xl border border-sandstone-200">
+                  {queue.waiting?.length || 0} Waiting in Queue
+                </div>
+              )}
+            </div>
           </div>
-        )}
-      </div>
+        ) : (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center space-y-2">
+            <AlertCircle className="w-8 h-8 text-amber-600 mx-auto" />
+            <h3 className="font-bold text-amber-900 text-base">No Monument Station Allocated</h3>
+            <p className="text-xs text-amber-800 max-w-md mx-auto">
+              Your staff account is not currently assigned to any monument site. Please contact an administrator to allocate your post in the Admin RBAC dashboard.
+            </p>
+          </div>
+        )
+      ) : (
+        <div className="bg-white p-4 rounded-2xl border border-sandstone-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex-1 max-w-sm">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-charcoal-600 mb-1">
+              Select Monument (Admin View)
+            </label>
+            <select
+              value={selectedMonument}
+              onChange={(e) => setSelectedMonument(e.target.value)}
+              className="w-full p-2.5 border border-sandstone-300 rounded-xl bg-white text-charcoal-900 font-semibold text-sm focus:outline-none focus:border-maroon-700 cursor-pointer"
+            >
+              <option value="">Select Monument...</option>
+              {monuments.map((m) => (
+                <option key={m._id} value={m._id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {queue && (
+            <div className="text-xs text-charcoal-600 font-semibold bg-sandstone-50 px-3 py-2 rounded-xl border border-sandstone-200 self-start sm:self-auto">
+              {queue.waiting?.length || 0} Waiting in Queue
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Workspace */}
       {loading && !queue ? (
@@ -158,7 +217,7 @@ export default function StaffQueue() {
                   <span className="text-xs uppercase font-bold text-charcoal-500 tracking-wider">
                     Token
                   </span>
-                  <div className="text-5xl sm:text-6xl font-black font-serif text-maroon-900 my-1">
+                  <div className="text-5xl sm:text-6xl font-black font-sans text-maroon-900 my-1">
                     #{queue.current.tokenNumber}
                   </div>
                   {queue.current.numberOfPeople > 1 && (
@@ -237,7 +296,7 @@ export default function StaffQueue() {
                       <span className="w-5 h-5 rounded-full bg-sandstone-200 text-charcoal-700 flex items-center justify-center font-bold text-xs">
                         {index + 1}
                       </span>
-                      <span className="font-bold font-serif text-charcoal-900 text-base">
+                      <span className="font-bold font-sans text-charcoal-900 text-base">
                         #{entry.tokenNumber}
                       </span>
                       {entry.numberOfPeople > 1 && (

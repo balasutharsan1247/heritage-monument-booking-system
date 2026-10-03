@@ -19,7 +19,7 @@ export const QRCodeCard = ({ value, size = 190, tokenNumber }) => {
           <div className="text-[10px] uppercase font-bold text-charcoal-500 tracking-wider">
             Token
           </div>
-          <div className="text-2xl font-black font-serif text-maroon-900 tracking-wider">
+          <div className="text-2xl font-black font-sans text-maroon-900 tracking-wider">
             #{tokenNumber}
           </div>
         </div>

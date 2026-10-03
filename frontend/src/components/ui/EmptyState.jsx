@@ -16,7 +16,7 @@ export const EmptyState = ({
       <div className="w-16 h-16 bg-sandstone-100 rounded-2xl flex items-center justify-center mx-auto mb-5 text-maroon-700 border border-sandstone-200">
         <Icon className="w-8 h-8" />
       </div>
-      <h3 className="text-xl font-bold text-charcoal-900 font-serif mb-2">
+      <h3 className="text-xl font-bold text-charcoal-900 font-sans mb-2">
         {title}
       </h3>
       <p className="text-sm text-charcoal-600 mb-6 leading-relaxed">

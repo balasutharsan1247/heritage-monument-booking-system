@@ -173,7 +173,7 @@ export default function TicketConfirmation() {
         
         {/* Pass Header */}
         <div className="bg-maroon-900 text-white p-6 text-center">
-          <h2 className="text-2xl font-bold font-serif">
+          <h2 className="text-2xl font-extrabold font-sans">
             {monumentName}
           </h2>
           {monumentLocation && (

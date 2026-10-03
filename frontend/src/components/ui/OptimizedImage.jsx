@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Landmark } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
@@ -16,6 +16,11 @@ export const OptimizedImage = ({
 }) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+
+  useEffect(() => {
+    setLoaded(false);
+    setError(false);
+  }, [src, fallbackSrc]);
 
   // If initial src is completely empty or null, start directly in error/fallback state
   const targetSrc = error ? fallbackSrc : (src || fallbackSrc);
@@ -55,7 +60,7 @@ export const OptimizedImage = ({
       {error && targetSrc === fallbackSrc && !loaded && (
         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-maroon-900/10 text-maroon-800">
           <Landmark className="w-10 h-10 mb-2 opacity-60" />
-          <span className="text-xs font-serif font-bold uppercase tracking-wider">{alt}</span>
+          <span className="text-xs font-sans font-bold uppercase tracking-wider">{alt}</span>
         </div>
       )}
     </div>

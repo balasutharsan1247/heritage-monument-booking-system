@@ -40,13 +40,13 @@ const resolveTicket = async ({ ticketId, tokenNumber, qrPayload }) => {
   let ticket = null;
   if (resolvedTicketId) {
     ticket = await Ticket.findById(resolvedTicketId)
-      .populate('monumentId', 'name location openingTime closingTime')
+      .populate('monumentId', 'name location openingTime closingTime imageUrl')
       .populate('visitorId', 'name email');
   }
 
   if (!ticket && resolvedTokenNumber) {
     ticket = await Ticket.findOne({ tokenNumber: resolvedTokenNumber.trim() })
-      .populate('monumentId', 'name location openingTime closingTime')
+      .populate('monumentId', 'name location openingTime closingTime imageUrl')
       .populate('visitorId', 'name email');
   }
 
