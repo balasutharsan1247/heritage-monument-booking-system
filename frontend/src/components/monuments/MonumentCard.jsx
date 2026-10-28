@@ -5,6 +5,7 @@ import { OptimizedImage } from '../ui/OptimizedImage';
 import { StatusBadge } from '../ui/StatusBadge';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../context/AuthContext';
+import { getMonumentFallback } from '../../utils/monumentImages';
 
 export const MonumentCard = ({ monument }) => {
   const { user } = useAuth?.() || {};
@@ -28,6 +29,7 @@ export const MonumentCard = ({ monument }) => {
         <OptimizedImage
           src={monument.imageUrl}
           alt={monument.name}
+          fallbackSrc={getMonumentFallback(monument.name)}
           className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
         />
         

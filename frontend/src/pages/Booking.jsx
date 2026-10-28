@@ -14,7 +14,8 @@ import {
   Minus,
   Users,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  Globe
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Breadcrumbs } from '../components/ui/Breadcrumbs';
@@ -42,6 +43,7 @@ export default function Booking() {
   const [monument, setMonument] = useState(null);
   const [wallet, setWallet] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [visitorCategory, setVisitorCategory] = useState('domestic');
   const [paymentMethod, setPaymentMethod] = useState('wallet');
   const [date, setDate] = useState('');
   const [slot, setSlot] = useState('');
@@ -75,7 +77,9 @@ export default function Booking() {
       .finally(() => setLoadingMonument(false));
   }, [id, today]);
 
-  const unitPrice = monument?.baseTicketPrice || 0;
+  const domesticPrice = monument?.baseTicketPrice || 0;
+  const foreignPrice = monument?.foreignTicketPrice !== undefined ? monument.foreignTicketPrice : domesticPrice;
+  const unitPrice = visitorCategory === 'foreign' ? foreignPrice : domesticPrice;
   const totalCost = unitPrice * quantity;
   const walletBalance = wallet?.balance ?? 0;
   const hasInsufficientWallet = paymentMethod === 'wallet' && walletBalance < totalCost;
@@ -109,6 +113,7 @@ export default function Booking() {
         slotEnd,
         quantity,
         paymentMethod,
+        visitorCategory,
       });
 
       if (res.success) {
@@ -239,6 +244,57 @@ export default function Booking() {
                     </button>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* Visitor Category (Domestic vs Foreign) */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-charcoal-700 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-maroon-800" />
+                  Visitor Category
+                </span>
+                <span className="text-[11px] text-charcoal-500 font-normal">
+                  Slot Capacity: {monument.capacity?.toLocaleString()} spots
+                </span>
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setVisitorCategory('domestic')}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between text-xs ${
+                    visitorCategory === 'domestic'
+                      ? 'border-maroon-800 bg-maroon-50 text-maroon-900 font-bold'
+                      : 'border-sandstone-200 bg-white hover:border-sandstone-300 text-charcoal-800 font-medium'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-bold text-sm">Domestic Visitor</span>
+                    {visitorCategory === 'domestic' && <CheckCircle2 className="w-4 h-4 text-maroon-800 shrink-0" />}
+                  </div>
+                  <span className="text-charcoal-600 mt-1 font-mono">
+                    {monument.baseTicketPrice === 0 ? 'Free (₹0)' : `₹${monument.baseTicketPrice} / ticket`}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setVisitorCategory('foreign')}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between text-xs ${
+                    visitorCategory === 'foreign'
+                      ? 'border-amber-800 bg-amber-50 text-amber-950 font-bold'
+                      : 'border-sandstone-200 bg-white hover:border-sandstone-300 text-charcoal-800 font-medium'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-bold text-sm">Foreign Visitor</span>
+                    {visitorCategory === 'foreign' && <CheckCircle2 className="w-4 h-4 text-amber-800 shrink-0" />}
+                  </div>
+                  <span className="text-charcoal-600 mt-1 font-mono">
+                    {foreignPrice === 0 ? 'Free (₹0)' : `₹${foreignPrice} / ticket`}
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -412,6 +468,13 @@ export default function Booking() {
               <span className="text-charcoal-500">Slot</span>
               <span className="font-semibold text-charcoal-800">
                 {selectedSlotObj ? selectedSlotObj.label : '—'}
+              </span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-charcoal-500">Visitor Category</span>
+              <span className="font-semibold text-charcoal-800 capitalize">
+                {visitorCategory} Visitor
               </span>
             </div>
 

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { api } from '../../api';
+import { PRESET_MONUMENT_IMAGES, getMonumentFallback } from '../../utils/monumentImages';
 
 export const MonumentFormModal = ({
   isOpen,
@@ -18,6 +20,10 @@ export const MonumentFormModal = ({
     location: '',
     capacity: 100,
     baseTicketPrice: 50,
+    foreignTicketPrice: 0,
+    dailyCapacity: 1000,
+    stayLimit: '',
+    sessionsInfo: '',
     openingTime: '09:00',
     closingTime: '17:00',
     imageUrl: '',
@@ -28,6 +34,27 @@ export const MonumentFormModal = ({
 
   const [submitting, setSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState([]);
+  const [imageStatus, setImageStatus] = useState('idle');
+
+  useEffect(() => {
+    const trimmed = form.imageUrl?.trim();
+    if (!trimmed) {
+      setImageStatus('idle');
+      return;
+    }
+    let isCancelled = false;
+    const img = new Image();
+    img.onload = () => {
+      if (!isCancelled) setImageStatus('valid');
+    };
+    img.onerror = () => {
+      if (!isCancelled) setImageStatus('invalid');
+    };
+    img.src = trimmed;
+    return () => {
+      isCancelled = true;
+    };
+  }, [form.imageUrl]);
 
   useEffect(() => {
     if (monument) {
@@ -37,6 +64,10 @@ export const MonumentFormModal = ({
         location: monument.location || '',
         capacity: monument.capacity ?? 100,
         baseTicketPrice: monument.baseTicketPrice ?? 50,
+        foreignTicketPrice: monument.foreignTicketPrice ?? 0,
+        dailyCapacity: monument.dailyCapacity ?? (monument.capacity ? monument.capacity * 2 : 1000),
+        stayLimit: monument.stayLimit || '',
+        sessionsInfo: monument.sessionsInfo || '',
         openingTime: monument.openingTime || '09:00',
         closingTime: monument.closingTime || '17:00',
         imageUrl: monument.imageUrl || '',
@@ -51,6 +82,10 @@ export const MonumentFormModal = ({
         location: '',
         capacity: 100,
         baseTicketPrice: 50,
+        foreignTicketPrice: 0,
+        dailyCapacity: 1000,
+        stayLimit: '',
+        sessionsInfo: '',
         openingTime: '09:00',
         closingTime: '17:00',
         imageUrl: '',
@@ -70,7 +105,10 @@ export const MonumentFormModal = ({
     const payload = {
       ...form,
       capacity: Number(form.capacity),
+      slotCapacity: Number(form.capacity),
       baseTicketPrice: Number(form.baseTicketPrice),
+      foreignTicketPrice: Number(form.foreignTicketPrice || 0),
+      dailyCapacity: Number(form.dailyCapacity || 0),
       latitude: Number(form.latitude),
       longitude: Number(form.longitude),
     };
@@ -143,28 +181,66 @@ export const MonumentFormModal = ({
             placeholder="e.g. Agra, Uttar Pradesh"
           />
 
-          <div>
+          <div className="space-y-2">
             <Input
               label="Image URL or Path"
               value={form.imageUrl}
               onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-              placeholder="e.g. /images/taj-mahal.jpg or https://..."
+              placeholder="e.g. /images/red-fort.jpg or https://..."
               helperText="Local path (e.g. /images/red-fort.jpg) or HTTPS URL"
             />
+
+            {/* Built-in Preset Quick Selector */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+              <span className="text-[10px] uppercase font-bold text-charcoal-400 mr-1">Presets:</span>
+              {PRESET_MONUMENT_IMAGES.map((preset) => (
+                <button
+                  key={preset.path}
+                  type="button"
+                  onClick={() => setForm({ ...form, imageUrl: preset.path })}
+                  className={`text-[11px] px-2 py-0.5 rounded-full border transition-all ${
+                    form.imageUrl === preset.path
+                      ? 'bg-maroon-800 text-white border-maroon-800 font-bold'
+                      : 'bg-sandstone-50 text-charcoal-600 border-sandstone-200 hover:border-maroon-700 hover:text-maroon-800'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Live Status and Preview */}
             {form.imageUrl?.trim() && (
-              <div className="mt-2 flex items-center gap-2.5 p-2 bg-sandstone-50 border border-sandstone-200 rounded-lg">
-                <img
-                  src={form.imageUrl}
-                  alt="Preview"
-                  className="w-12 h-9 object-cover rounded border border-sandstone-300 shrink-0"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-medium text-charcoal-800">Image Preview</p>
-                  <p className="text-[10px] text-charcoal-400 truncate">{form.imageUrl}</p>
-                </div>
+              <div className="space-y-1.5 pt-1">
+                {imageStatus === 'valid' && (
+                  <div className="flex items-center gap-2.5 p-2 bg-emerald-50/80 border border-emerald-200 rounded-lg">
+                    <img
+                      src={form.imageUrl}
+                      alt="Preview"
+                      className="w-12 h-9 object-cover rounded border border-emerald-300 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-800">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Valid image URL</span>
+                      </div>
+                      <p className="text-[10px] text-emerald-700/80 truncate">{form.imageUrl}</p>
+                    </div>
+                  </div>
+                )}
+
+                {imageStatus === 'invalid' && (
+                  <div className="flex items-start gap-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-amber-900">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="text-xs space-y-0.5">
+                      <p className="font-bold text-amber-800">Image could not be loaded</p>
+                      <p className="text-[11px] text-amber-700">
+                        This URL is unreachable or broken. If saved, visitors will see{' '}
+                        <strong>{getMonumentFallback(form.name)}</strong> as the fallback.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -181,7 +257,15 @@ export const MonumentFormModal = ({
           />
 
           <Input
-            label="Base Price (₹)"
+            label="Daily Cap"
+            type="number"
+            min="1"
+            value={form.dailyCapacity}
+            onChange={(e) => setForm({ ...form, dailyCapacity: e.target.value })}
+          />
+
+          <Input
+            label="Domestic Base (₹)"
             type="number"
             min="0"
             required
@@ -189,6 +273,16 @@ export const MonumentFormModal = ({
             onChange={(e) => setForm({ ...form, baseTicketPrice: e.target.value })}
           />
 
+          <Input
+            label="Foreign Base (₹)"
+            type="number"
+            min="0"
+            value={form.foreignTicketPrice}
+            onChange={(e) => setForm({ ...form, foreignTicketPrice: e.target.value })}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Input
             label="Opening (HH:MM)"
             required
@@ -205,6 +299,20 @@ export const MonumentFormModal = ({
             value={form.closingTime}
             onChange={(e) => setForm({ ...form, closingTime: e.target.value })}
             placeholder="17:00"
+          />
+
+          <Input
+            label="Stay Limit"
+            value={form.stayLimit}
+            onChange={(e) => setForm({ ...form, stayLimit: e.target.value })}
+            placeholder="e.g. 3 hours per ticket"
+          />
+
+          <Input
+            label="Sessions / Timings"
+            value={form.sessionsInfo}
+            onChange={(e) => setForm({ ...form, sessionsInfo: e.target.value })}
+            placeholder="e.g. Hourly slots"
           />
         </div>
 

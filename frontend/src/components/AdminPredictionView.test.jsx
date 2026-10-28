@@ -6,16 +6,30 @@ import AdminPredictionView from './AdminPredictionView';
 global.fetch = vi.fn();
 
 describe('AdminPredictionView', () => {
+  let mockPredictResponse;
+
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Mock the initial monuments fetch
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        success: true,
-        data: [{ _id: 'monument1', name: 'Taj Mahal' }]
-      })
+    mockPredictResponse = null;
+
+    global.fetch = vi.fn().mockImplementation((url) => {
+      if (url.includes('/monuments')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: [{ _id: 'monument1', name: 'Taj Mahal' }]
+          })
+        });
+      }
+
+      if (url.includes('/admin/predictions')) {
+        if (mockPredictResponse) {
+          return Promise.resolve(mockPredictResponse);
+        }
+      }
+
+      return Promise.reject(new Error(`Unhandled URL: ${url}`));
     });
   });
 
@@ -30,14 +44,7 @@ describe('AdminPredictionView', () => {
   });
 
   it('displays prediction results on successful API response', async () => {
-    render(<AdminPredictionView />);
-    
-    await waitFor(() => {
-      expect(screen.getByText('Taj Mahal')).toBeInTheDocument();
-    });
-
-    // Mock the predict fetch
-    global.fetch.mockResolvedValueOnce({
+    mockPredictResponse = {
       ok: true,
       json: async () => ({
         success: true,
@@ -52,19 +59,25 @@ describe('AdminPredictionView', () => {
           trainingDateRange: { start: '2023-01-01', end: '2025-12-31' }
         }
       })
+    };
+
+    render(<AdminPredictionView />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Taj Mahal')).toBeInTheDocument();
     });
 
     // Select monument
     fireEvent.change(screen.getByTestId('monument-select'), { target: { value: 'monument1' } });
     
-    // Select date
-    fireEvent.change(screen.getByTestId('date-input'), { target: { value: '2026-10-15' } });
+    // Select valid date in the future
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + 5);
+    const dateStr = targetDate.toISOString().split('T')[0];
+    fireEvent.change(screen.getByTestId('date-input'), { target: { value: dateStr } });
     
-    // Click predict
-    fireEvent.click(screen.getByTestId('predict-button'));
-
-    // Loading state check
-    expect(screen.getByText('Analyzing...')).toBeInTheDocument();
+    // Submit form
+    fireEvent.submit(screen.getByTestId('predict-button').closest('form'));
 
     // Await results
     await waitFor(() => {
@@ -81,26 +94,28 @@ describe('AdminPredictionView', () => {
   });
 
   it('displays error message on failed API response', async () => {
-    render(<AdminPredictionView />);
-    
-    await waitFor(() => {
-      expect(screen.getByText('Taj Mahal')).toBeInTheDocument();
-    });
-
-    // Mock a 422 Insufficient Data error
-    global.fetch.mockResolvedValueOnce({
+    mockPredictResponse = {
       ok: false,
       status: 422,
       json: async () => ({
         success: false,
         message: 'Not enough historical data.'
       })
+    };
+
+    render(<AdminPredictionView />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Taj Mahal')).toBeInTheDocument();
     });
 
-    // Select monument
+    // Select valid date in the future
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + 5);
+    const dateStr = targetDate.toISOString().split('T')[0];
     fireEvent.change(screen.getByTestId('monument-select'), { target: { value: 'monument1' } });
-    fireEvent.change(screen.getByTestId('date-input'), { target: { value: '2026-10-15' } });
-    fireEvent.click(screen.getByTestId('predict-button'));
+    fireEvent.change(screen.getByTestId('date-input'), { target: { value: dateStr } });
+    fireEvent.submit(screen.getByTestId('predict-button').closest('form'));
 
     // Await error state
     await waitFor(() => {

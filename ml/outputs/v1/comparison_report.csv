@@ -1,5 +1,5 @@
 Metric,Baseline,Proposed_Model,Absolute_Difference,Relative_Improvement_Pct,Better_Model
-MAE,526.6,185.32,-341.28,64.81,Proposed
-RMSE,1033.67,257.12,-776.55,75.13,Proposed
-MAPE,20.76,7.63,-13.13,63.25,Proposed
-Evaluated_Observations,460.0,460.0,0.0,0.0,N/A
+MAE,1908.25,821.95,-1086.3,56.93,Proposed
+RMSE,4891.27,1884.25,-3007.02,61.48,Proposed
+MAPE,25.88,11.53,-14.35,55.45,Proposed
+Evaluated_Observations,1914.0,1914.0,0.0,0.0,N/A

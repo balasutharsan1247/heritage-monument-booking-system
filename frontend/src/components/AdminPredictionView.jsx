@@ -35,7 +35,8 @@ const AdminPredictionView = () => {
         const response = await fetch(`${API_URL}/monuments`);
         const json = await response.json();
         if (json.success) {
-          setMonuments(json.data.monuments || json.data || []);
+          const list = json.data?.monuments || json.data || [];
+          setMonuments(Array.isArray(list) ? list : []);
         }
       } catch (err) {
         console.error('Failed to load monuments', err);
@@ -130,7 +131,7 @@ const AdminPredictionView = () => {
         </div>
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sandstone-100 text-charcoal-700 text-xs font-semibold border border-sandstone-200">
           <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          <span>Random Forest Regression Engine</span>
+          <span>{predictionData?.modelName ? `${predictionData.modelName} Engine` : 'Gradient Boosted Ensemble Engine'}</span>
         </div>
       </div>
 

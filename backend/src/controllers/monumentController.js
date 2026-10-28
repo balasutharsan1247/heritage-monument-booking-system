@@ -39,6 +39,13 @@ const validateMonumentData = (data, isCreate = false) => {
     }
   }
 
+  if (data.foreignTicketPrice !== undefined && data.foreignTicketPrice !== null && data.foreignTicketPrice !== '') {
+    const fPrice = Number(data.foreignTicketPrice);
+    if (isNaN(fPrice) || fPrice < 0) {
+      errors.push('Foreign ticket price must be a non-negative number');
+    }
+  }
+
   const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
   if (data.openingTime !== undefined && !timeRegex.test(data.openingTime)) {
     errors.push('Opening time must be in HH:MM format');

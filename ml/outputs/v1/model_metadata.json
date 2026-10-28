@@ -55,15 +55,15 @@
     "festival_name",
     "data_status"
   ],
-  "training_start_date": "2024-01-02",
-  "training_end_date": "2024-09-30",
-  "testing_start_date": "2024-10-01",
-  "testing_end_date": "2024-12-31",
-  "training_row_count": 1365,
-  "testing_row_count": 460,
-  "monument_count": 5,
+  "training_start_date": "2026-01-02",
+  "training_end_date": "2026-08-31",
+  "testing_start_date": "2026-09-01",
+  "testing_end_date": "2026-10-28",
+  "training_row_count": 8052,
+  "testing_row_count": 1914,
+  "monument_count": 34,
   "random_seed": 42,
-  "dataset_path": "ml/data/daily_monument_footfall.csv",
+  "dataset_path": "ml/heritage_footfall_updated.csv",
   "preprocessing_description": "ColumnTransformer: SimpleImputer(median) + StandardScaler on numerical features; SimpleImputer(constant, 'missing') + OneHotEncoder(ignore) on categorical features. Fit strictly on training set.",
   "model_parameters": {
     "model_type": "HistGradientBoostingRegressor",
@@ -80,5 +80,5 @@
     "Extreme black swan events or unannounced emergency closures are not anticipated.",
     "Not certified as production-ready without ongoing real-world drift monitoring."
   ],
-  "training_timestamp": "2026-10-02T08:53:15.963715+00:00"
+  "training_timestamp": "2026-10-28T17:33:27.346996+00:00"
 }

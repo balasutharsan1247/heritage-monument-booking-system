@@ -5,7 +5,7 @@
   "target_column": "total_visitors",
   "forecast_horizon": "1 day",
   "aggregation_level": "daily",
-  "dataset_path": "ml/data/daily_monument_footfall.csv",
+  "dataset_path": "ml/heritage_footfall_updated.csv",
   "output_dir": "ml/outputs/v1",
   "random_seed": 42,
   "monument_selection": [
@@ -17,7 +17,7 @@
   ],
   "split_config": {
     "strategy": "date",
-    "split_date": "2024-10-01",
+    "split_date": "2026-09-01",
     "split_ratio": 0.8,
     "chronological": true
   },

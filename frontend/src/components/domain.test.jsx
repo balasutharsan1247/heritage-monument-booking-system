@@ -6,6 +6,7 @@ import { MonumentCard } from './monuments/MonumentCard';
 import { QueueStatusWidget } from './tickets/QueueStatusWidget';
 import { TicketCard } from './tickets/TicketCard';
 import { AuthContext } from '../context/AuthContext';
+import { getMonumentFallback } from '../utils/monumentImages';
 
 describe('Domain Components', () => {
   describe('MonumentCard', () => {
@@ -155,6 +156,34 @@ describe('Domain Components', () => {
       expect(screen.getByText('Qutub Minar')).toBeInTheDocument();
       const img = screen.getByRole('img', { name: 'Qutub Minar' });
       expect(img).toHaveAttribute('src', '/images/qutub-minar.jpg');
+    });
+
+    it('falls back to monument-specific image when Red Fort has no imageUrl', () => {
+      const ticketRedFort = {
+        ...baseTicket,
+        monumentId: {
+          name: 'Red Fort',
+          location: 'Delhi',
+        },
+      };
+
+      render(
+        <BrowserRouter>
+          <TicketCard ticket={ticketRedFort} />
+        </BrowserRouter>
+      );
+
+      const img = screen.getByRole('img', { name: 'Red Fort' });
+      expect(img).toHaveAttribute('src', '/images/red-fort.jpg');
+    });
+
+    it('correctly maps known monuments in getMonumentFallback', () => {
+      expect(getMonumentFallback('Red Fort')).toBe('/images/red-fort.jpg');
+      expect(getMonumentFallback('Gateway of India')).toBe('/images/gateway-of-india.jpg');
+      expect(getMonumentFallback('Qutub Minar')).toBe('/images/qutub-minar.jpg');
+      expect(getMonumentFallback('Meenakshi Amman Temple')).toBe('/images/meenakshi-temple.jpg');
+      expect(getMonumentFallback('Taj Mahal')).toBe('/images/taj-mahal.jpg');
+      expect(getMonumentFallback('Unknown Monument')).toBe('/images/taj-mahal.jpg');
     });
   });
 });

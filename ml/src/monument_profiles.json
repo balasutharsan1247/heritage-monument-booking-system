@@ -1,0 +1,274 @@
+{
+  "M001": {
+    "name": "Meenakshi Amman Temple",
+    "state": "Tamil Nadu",
+    "city": "Madurai",
+    "monument_type": "temple",
+    "daily_capacity": 130000,
+    "closed_weekday": -1
+  },
+  "M002": {
+    "name": "Taj Mahal",
+    "state": "Uttar Pradesh",
+    "city": "Agra",
+    "monument_type": "tomb",
+    "daily_capacity": 80000,
+    "closed_weekday": 4
+  },
+  "M003": {
+    "name": "Gateway of India Promenade",
+    "state": "Maharashtra",
+    "city": "Mumbai",
+    "monument_type": "archaeological_site",
+    "daily_capacity": 135000,
+    "closed_weekday": -1
+  },
+  "M004": {
+    "name": "Qutub Minar Complex",
+    "state": "Delhi",
+    "city": "New Delhi",
+    "monument_type": "archaeological_site",
+    "daily_capacity": 35000,
+    "closed_weekday": -1
+  },
+  "M005": {
+    "name": "Red Fort Lal Qila",
+    "state": "Delhi",
+    "city": "New Delhi",
+    "monument_type": "fort",
+    "daily_capacity": 38000,
+    "closed_weekday": 0
+  },
+  "M006": {
+    "name": "Amer Citadel",
+    "state": "Rajasthan",
+    "city": "Jaipur",
+    "monument_type": "fort",
+    "daily_capacity": 25000,
+    "closed_weekday": -1
+  },
+  "M007": {
+    "name": "Golconda Fortress",
+    "state": "Telangana",
+    "city": "Hyderabad",
+    "monument_type": "fort",
+    "daily_capacity": 22000,
+    "closed_weekday": -1
+  },
+  "M008": {
+    "name": "Mehrangarh Fort",
+    "state": "Rajasthan",
+    "city": "Jodhpur",
+    "monument_type": "fort",
+    "daily_capacity": 18000,
+    "closed_weekday": -1
+  },
+  "M009": {
+    "name": "Gwalior Fort",
+    "state": "Madhya Pradesh",
+    "city": "Gwalior",
+    "monument_type": "fort",
+    "daily_capacity": 15000,
+    "closed_weekday": -1
+  },
+  "M010": {
+    "name": "Mysuru Royal Durbar Palace",
+    "state": "Karnataka",
+    "city": "Mysuru",
+    "monument_type": "palace",
+    "daily_capacity": 45000,
+    "closed_weekday": -1
+  },
+  "M011": {
+    "name": "City Palace Udaipur",
+    "state": "Rajasthan",
+    "city": "Udaipur",
+    "monument_type": "palace",
+    "daily_capacity": 22000,
+    "closed_weekday": -1
+  },
+  "M012": {
+    "name": "Fatehpur Sikri Royal Complex",
+    "state": "Uttar Pradesh",
+    "city": "Fatehpur Sikri",
+    "monument_type": "palace",
+    "daily_capacity": 24000,
+    "closed_weekday": -1
+  },
+  "M013": {
+    "name": "Brihadisvara Temple",
+    "state": "Tamil Nadu",
+    "city": "Thanjavur",
+    "monument_type": "temple",
+    "daily_capacity": 28000,
+    "closed_weekday": -1
+  },
+  "M014": {
+    "name": "Sun Temple Konark",
+    "state": "Odisha",
+    "city": "Konark",
+    "monument_type": "temple",
+    "daily_capacity": 20000,
+    "closed_weekday": -1
+  },
+  "M015": {
+    "name": "Khajuraho Group of Temples",
+    "state": "Madhya Pradesh",
+    "city": "Khajuraho",
+    "monument_type": "temple",
+    "daily_capacity": 16000,
+    "closed_weekday": -1
+  },
+  "M016": {
+    "name": "Chhatrapati Vastu Museum",
+    "state": "Maharashtra",
+    "city": "Mumbai",
+    "monument_type": "museum",
+    "daily_capacity": 14000,
+    "closed_weekday": 0
+  },
+  "M017": {
+    "name": "National Imperial Museum",
+    "state": "Delhi",
+    "city": "New Delhi",
+    "monument_type": "museum",
+    "daily_capacity": 12000,
+    "closed_weekday": 0
+  },
+  "M018": {
+    "name": "Victoria Memorial Museum",
+    "state": "West Bengal",
+    "city": "Kolkata",
+    "monument_type": "museum",
+    "daily_capacity": 26000,
+    "closed_weekday": 0
+  },
+  "M019": {
+    "name": "Ajanta Heritage Caves",
+    "state": "Maharashtra",
+    "city": "Aurangabad",
+    "monument_type": "cave",
+    "daily_capacity": 15000,
+    "closed_weekday": 0
+  },
+  "M020": {
+    "name": "Ellora Rock-Cut Monoliths",
+    "state": "Maharashtra",
+    "city": "Aurangabad",
+    "monument_type": "cave",
+    "daily_capacity": 16000,
+    "closed_weekday": 1
+  },
+  "M021": {
+    "name": "Elephanta Island Caverns",
+    "state": "Maharashtra",
+    "city": "Mumbai",
+    "monument_type": "cave",
+    "daily_capacity": 12000,
+    "closed_weekday": 0
+  },
+  "M022": {
+    "name": "Badami Cave Shrines",
+    "state": "Karnataka",
+    "city": "Badami",
+    "monument_type": "cave",
+    "daily_capacity": 10000,
+    "closed_weekday": -1
+  },
+  "M023": {
+    "name": "Humayun Imperial Tomb",
+    "state": "Delhi",
+    "city": "New Delhi",
+    "monument_type": "tomb",
+    "daily_capacity": 18000,
+    "closed_weekday": -1
+  },
+  "M024": {
+    "name": "Akbar Mausoleum Sikandra",
+    "state": "Uttar Pradesh",
+    "city": "Agra",
+    "monument_type": "tomb",
+    "daily_capacity": 12000,
+    "closed_weekday": -1
+  },
+  "M025": {
+    "name": "Gol Gumbaz Mausoleum",
+    "state": "Karnataka",
+    "city": "Vijayapura",
+    "monument_type": "tomb",
+    "daily_capacity": 11000,
+    "closed_weekday": -1
+  },
+  "M026": {
+    "name": "Hampi Archaeological Ruins",
+    "state": "Karnataka",
+    "city": "Hampi",
+    "monument_type": "archaeological_site",
+    "daily_capacity": 22000,
+    "closed_weekday": -1
+  },
+  "M027": {
+    "name": "Nalanda Ancient Mahavihara",
+    "state": "Bihar",
+    "city": "Nalanda",
+    "monument_type": "archaeological_site",
+    "daily_capacity": 12000,
+    "closed_weekday": -1
+  },
+  "M028": {
+    "name": "Sanchi Great Stupa Complex",
+    "state": "Madhya Pradesh",
+    "city": "Sanchi",
+    "monument_type": "archaeological_site",
+    "daily_capacity": 10000,
+    "closed_weekday": -1
+  },
+  "M029": {
+    "name": "Mahabalipuram Shore Complex",
+    "state": "Tamil Nadu",
+    "city": "Mamallapuram",
+    "monument_type": "archaeological_site",
+    "daily_capacity": 26000,
+    "closed_weekday": -1
+  },
+  "M030": {
+    "name": "Rani ki Vav Stepwell",
+    "state": "Gujarat",
+    "city": "Patan",
+    "monument_type": "archaeological_site",
+    "daily_capacity": 13000,
+    "closed_weekday": -1
+  },
+  "M031": {
+    "name": "Chittorgarh Fort Enclosure",
+    "state": "Rajasthan",
+    "city": "Chittorgarh",
+    "monument_type": "fort",
+    "daily_capacity": 16000,
+    "closed_weekday": -1
+  },
+  "M032": {
+    "name": "Padmanabhapuram Palace",
+    "state": "Tamil Nadu",
+    "city": "Thuckalay",
+    "monument_type": "palace",
+    "daily_capacity": 11000,
+    "closed_weekday": 0
+  },
+  "M033": {
+    "name": "Udayagiri & Khandagiri Caves",
+    "state": "Odisha",
+    "city": "Bhubaneswar",
+    "monument_type": "cave",
+    "daily_capacity": 10000,
+    "closed_weekday": -1
+  },
+  "M034": {
+    "name": "Shravanabelagola Monolith",
+    "state": "Karnataka",
+    "city": "Hassan",
+    "monument_type": "temple",
+    "daily_capacity": 15000,
+    "closed_weekday": -1
+  }
+}

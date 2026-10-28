@@ -10,7 +10,7 @@ const jwt = require('jsonwebtoken');
 
 const bookTicket = async (req, res) => {
   try {
-    const { monumentId, visitDate, slotStart, slotEnd, quantity = 1, paymentMethod } = req.body;
+    const { monumentId, visitDate, slotStart, slotEnd, quantity = 1, paymentMethod, visitorCategory = 'domestic' } = req.body;
 
     if (!monumentId || !visitDate || !slotStart || !slotEnd) {
       return res.status(400).json({ success: false, message: 'Missing required fields' });
@@ -56,8 +56,10 @@ const bookTicket = async (req, res) => {
       });
     }
 
-    // Calculate total cost
-    const totalCost = monument.baseTicketPrice * parsedQuantity;
+    // Calculate total cost based on visitor type (Domestic vs Foreign)
+    const isForeign = visitorCategory === 'foreign';
+    const unitPrice = isForeign && monument.foreignTicketPrice !== undefined ? monument.foreignTicketPrice : monument.baseTicketPrice;
+    const totalCost = unitPrice * parsedQuantity;
 
     // Handle Wallet Payment if selected: deduct visitor wallet
     if (paymentMethod === 'wallet') {
@@ -101,6 +103,7 @@ const bookTicket = async (req, res) => {
       tokenNumber,
       numberOfPeople: parsedQuantity,
       price: totalCost,
+      visitorCategory: isForeign ? 'foreign' : 'domestic',
       status: 'booked',
     });
 

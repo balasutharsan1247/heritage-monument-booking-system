@@ -28,6 +28,35 @@ const monumentSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  foreignTicketPrice: {
+    type: Number,
+    default: 0,
+  },
+  slotCapacity: {
+    type: Number,
+  },
+  dailyCapacity: {
+    type: Number,
+  },
+  stayLimit: {
+    type: String,
+  },
+  sessionsInfo: {
+    type: String,
+  },
+  ticketPricingDomestic: {
+    type: String,
+  },
+  ticketPricingForeign: {
+    type: String,
+  },
+  additionalFees: {
+    type: String,
+  },
+  bookingRules: {
+    type: [String],
+    default: [],
+  },
   openingTime: {
     type: String,
     required: true,

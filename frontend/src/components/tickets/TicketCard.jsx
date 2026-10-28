@@ -4,8 +4,7 @@ import { Calendar, Clock, QrCode, MapPin, XCircle, Users } from 'lucide-react';
 import { StatusBadge } from '../ui/StatusBadge';
 import { Button } from '../ui/Button';
 import { OptimizedImage } from '../ui/OptimizedImage';
-
-const DEFAULT_TAJ_MAHAL_IMAGE = '/images/taj-mahal.jpg';
+import { getMonumentFallback } from '../../utils/monumentImages';
 
 export const TicketCard = ({
   ticket,
@@ -18,11 +17,12 @@ export const TicketCard = ({
   const monumentName = monument?.name || 'Heritage Monument';
   const monumentLocation = monument?.location || '';
   const rawImageUrl = monument?.imageUrl?.trim();
+  const fallbackImage = getMonumentFallback(monumentName);
   const monumentImage = rawImageUrl
     ? (rawImageUrl.startsWith('http://') || rawImageUrl.startsWith('https://') || rawImageUrl.startsWith('data:') || rawImageUrl.startsWith('/')
       ? rawImageUrl
       : `/${rawImageUrl}`)
-    : DEFAULT_TAJ_MAHAL_IMAGE;
+    : fallbackImage;
 
   const canCancel = ticket.status === 'booked' || ticket.status === 'valid';
 
@@ -42,7 +42,7 @@ export const TicketCard = ({
           src={monumentImage}
           alt={monumentName}
           aspectRatio="h-full w-full"
-          fallbackSrc={DEFAULT_TAJ_MAHAL_IMAGE}
+          fallbackSrc={fallbackImage}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
 

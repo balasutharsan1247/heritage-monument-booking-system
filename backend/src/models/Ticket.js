@@ -42,6 +42,11 @@ const ticketSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  visitorCategory: {
+    type: String,
+    enum: ['domestic', 'foreign'],
+    default: 'domestic',
+  },
   numberOfPeople: {
     type: Number,
     default: 1,

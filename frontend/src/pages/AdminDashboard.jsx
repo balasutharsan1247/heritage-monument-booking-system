@@ -546,10 +546,18 @@ export default function AdminDashboard() {
                         {m.openingTime} – {m.closingTime}
                       </td>
                       <td className="py-3 px-4 font-semibold text-charcoal-800">
-                        {m.capacity} / slot
+                        <div>{m.capacity?.toLocaleString()} / slot</div>
+                        {m.dailyCapacity && (
+                          <div className="text-[10px] text-charcoal-400">Daily: ~{m.dailyCapacity.toLocaleString()}</div>
+                        )}
                       </td>
-                      <td className="py-3 px-4 font-bold text-maroon-900">
-                        ₹{m.baseTicketPrice}
+                      <td className="py-3 px-4">
+                        <div className="font-bold text-maroon-900">
+                          {m.baseTicketPrice === 0 ? 'Free' : `₹${m.baseTicketPrice}`} <span className="text-[10px] text-charcoal-500 font-normal">(Dom)</span>
+                        </div>
+                        <div className="text-[11px] text-amber-900 font-semibold">
+                          {m.foreignTicketPrice === 0 ? 'Free' : `₹${m.foreignTicketPrice ?? 0}`} <span className="text-[10px] text-charcoal-500 font-normal">(For)</span>
+                        </div>
                       </td>
                       <td className="py-3 px-4">
                         <button
