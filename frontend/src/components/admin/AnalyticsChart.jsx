@@ -1,7 +1,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 
-export default function AnalyticsChart({ chartData = [], colors = ['#852535', '#059669', '#2563eb', '#dc2626'] }) {
+export default function AnalyticsChart({ chartData = [], colors = ['#852535', '#2563eb', '#dc2626', '#64748b'] }) {
   if (!chartData || chartData.length === 0) {
     return (
       <div className="h-72 flex items-center justify-center text-charcoal-400 text-sm font-medium">
@@ -41,7 +41,7 @@ export default function AnalyticsChart({ chartData = [], colors = ['#852535', '#
           />
           <Bar dataKey="value" radius={[8, 8, 0, 0]} maxBarSize={60}>
             {chartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+              <Cell key={`cell-${index}`} fill={entry.fill || colors[index % colors.length]} />
             ))}
           </Bar>
         </BarChart>

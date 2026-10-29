@@ -225,7 +225,6 @@ export default function AdminDashboard() {
 
   const chartData = [
     { name: 'Total Bookings', value: totalTickets },
-    { name: 'Confirmed', value: validTickets },
     { name: 'Checked In', value: usedTickets },
     { name: 'Expired', value: expiredTickets },
     { name: 'Cancelled', value: cancelledTickets },
