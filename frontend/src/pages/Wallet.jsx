@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { openRazorpayPayment } from '../utils/razorpay';
 import { 
   Wallet as WalletIcon, 
   PlusCircle, 
@@ -87,24 +88,84 @@ export default function Wallet() {
     setTopupError('');
 
     try {
-      const res = await api.topupWallet({
+      if (isAdmin) {
+        // Admin capital allocation / grant flow
+        const res = await api.topupWallet({
+          amount: amountNum,
+          paymentMethod,
+          description: `Treasury Allocation via ${paymentMethod}`,
+          purpose: 'grant',
+        });
+
+        if (res.success) {
+          toast.success(res.message || `Added ₹${amountNum.toLocaleString()} to treasury!`);
+          setIsTopupOpen(false);
+          setTopupAmount('');
+          fetchWallet();
+        } else {
+          setTopupError(res.message || 'Top-up failed. Please try again.');
+        }
+        setTopupLoading(false);
+        return;
+      }
+
+      // Visitor Razorpay Payment Gateway Flow
+      const orderRes = await api.createPaymentOrder({
         amount: amountNum,
-        paymentMethod,
-        description: isAdmin ? `Treasury Allocation via ${paymentMethod}` : `Top-up via ${paymentMethod}`,
-        purpose: isAdmin ? 'grant' : 'topup',
+        purpose: 'wallet_topup',
+        details: {
+          description: `Wallet Recharge via ${paymentMethod}`,
+        },
       });
 
-      if (res.success) {
-        toast.success(res.message || `Added ₹${amountNum.toLocaleString()} to wallet!`);
-        setIsTopupOpen(false);
-        setTopupAmount('');
-        fetchWallet();
-      } else {
-        setTopupError(res.message || 'Top-up failed. Please try again.');
+      if (!orderRes.success) {
+        setTopupError(orderRes.message || 'Could not initiate Razorpay order');
+        setTopupLoading(false);
+        return;
       }
+
+      await openRazorpayPayment({
+        order: orderRes.order,
+        keyId: orderRes.keyId,
+        isMock: orderRes.isMock,
+        name: 'Heritage Virtual Wallet',
+        description: `Wallet Top-up of ₹${amountNum.toLocaleString()}`,
+        prefill: {
+          name: user?.name || '',
+          email: user?.email || '',
+        },
+        onSuccess: async (paymentData) => {
+          try {
+            const verifyRes = await api.verifyPayment({
+              ...paymentData,
+              purpose: 'wallet_topup',
+              details: {
+                amount: amountNum,
+                description: `Money transferred directly from Razorpay (${paymentMethod})`,
+              },
+            });
+
+            if (verifyRes.success) {
+              toast.success(verifyRes.message || `₹${amountNum.toLocaleString()} added to your wallet!`);
+              setIsTopupOpen(false);
+              setTopupAmount('');
+              fetchWallet();
+            } else {
+              setTopupError(verifyRes.message || 'Payment verification failed');
+            }
+          } catch {
+            setTopupError('Error verifying wallet payment with server.');
+          } finally {
+            setTopupLoading(false);
+          }
+        },
+        onFailure: (errMsg) => {
+          setTopupError(errMsg || 'Payment was cancelled or failed.');
+          setTopupLoading(false);
+        },
+      });
     } catch {
       setTopupError('Network error processing top-up.');
-    } finally {
       setTopupLoading(false);
     }
   };
@@ -476,11 +537,15 @@ export default function Wallet() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-sm text-charcoal-900 truncate">
-                          {tx.description || (isCredit ? 'Wallet Top-up' : 'Wallet Debit')}
+                          {tx.paymentMethod?.toLowerCase().includes('razorpay') || tx.description?.toLowerCase().includes('razorpay')
+                            ? 'Money transferred directly from Razorpay'
+                            : (tx.description || (isCredit ? 'Wallet Top-up' : 'Wallet Debit'))}
                         </span>
                         <span
                           className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                            tx.purpose === 'ticket_refund' || tx.purpose === 'ticket_refund_deduction'
+                            tx.paymentMethod?.toLowerCase().includes('razorpay') || tx.description?.toLowerCase().includes('razorpay')
+                              ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                              : tx.purpose === 'ticket_refund' || tx.purpose === 'ticket_refund_deduction'
                               ? 'bg-rose-100 text-rose-800'
                               : tx.purpose === 'ticket_purchase'
                               ? 'bg-amber-100 text-amber-800'
@@ -491,7 +556,9 @@ export default function Wallet() {
                               : 'bg-charcoal-100 text-charcoal-800'
                           }`}
                         >
-                          {tx.purpose?.replace(/_/g, ' ') || tx.type}
+                          {tx.paymentMethod?.toLowerCase().includes('razorpay') || tx.description?.toLowerCase().includes('razorpay')
+                            ? 'Razorpay Direct'
+                            : (tx.purpose?.replace(/_/g, ' ') || tx.type)}
                         </span>
                       </div>
 
@@ -630,7 +697,7 @@ export default function Wallet() {
                 ? 'Processing...' 
                 : isAdmin 
                 ? `Record ₹${parseFloat(topupAmount || 0).toLocaleString()} Allocation` 
-                : `Deposit ₹${parseFloat(topupAmount || 0).toLocaleString()}`}
+                : `Pay ₹${parseFloat(topupAmount || 0).toLocaleString()} via Razorpay`}
             </Button>
           </div>
         </form>

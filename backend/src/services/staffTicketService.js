@@ -4,6 +4,7 @@ const QueueEntry = require('../models/QueueEntry');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const { syncExpiredTickets } = require('./ticketExpiryService');
 
 /**
  * Resolves a ticket from JWT qrPayload, tokenNumber, or ticketId
@@ -65,6 +66,10 @@ const checkTicketValidity = (ticket, selectedMonumentId) => {
     return { valid: false, reason: 'Ticket has been cancelled and refunded' };
   }
 
+  if (ticket.status === 'expired') {
+    return { valid: false, reason: 'Ticket has expired. The visitor did not check in during the reserved time slot.' };
+  }
+
   if (ticket.status === 'used') {
     const checkInStr = ticket.checkInTime 
       ? new Date(ticket.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
@@ -87,20 +92,24 @@ const checkTicketValidity = (ticket, selectedMonumentId) => {
 
   if (!isSameDate) {
     if (ticketDate < now) {
-      return { valid: false, reason: `Ticket expired (valid on ${ticketDate.toLocaleDateString()})` };
+      ticket.status = 'expired';
+      Ticket.findByIdAndUpdate(ticket._id, { status: 'expired' }).exec();
+      return { valid: false, reason: `Ticket has expired (was valid on ${ticketDate.toLocaleDateString()})` };
     } else {
       return { valid: false, reason: `Ticket is for a future date (${ticketDate.toLocaleDateString()})` };
     }
   }
 
-  // Grace period on slot (allow entry during and up to 1 hr after slot end)
+  // Check if slot end has passed
   if (ticket.slotEnd) {
     const [endHour, endMinute] = ticket.slotEnd.split(':').map(Number);
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
 
-    if (currentHour > endHour + 1 || (currentHour === endHour + 1 && currentMinute > endMinute)) {
-      return { valid: false, reason: `Ticket slot (${ticket.slotStart} – ${ticket.slotEnd}) has expired` };
+    if (!isNaN(endHour) && !isNaN(endMinute) && (currentHour > endHour || (currentHour === endHour && currentMinute >= endMinute))) {
+      ticket.status = 'expired';
+      Ticket.findByIdAndUpdate(ticket._id, { status: 'expired' }).exec();
+      return { valid: false, reason: `Ticket slot (${ticket.slotStart} – ${ticket.slotEnd}) has expired. Visitor did not check in during the slot.` };
     }
   }
 
@@ -111,6 +120,7 @@ const checkTicketValidity = (ticket, selectedMonumentId) => {
  * Verifies ticket details without marking as used
  */
 const verifyTicket = async ({ ticketId, tokenNumber, qrPayload, selectedMonumentId }) => {
+  await syncExpiredTickets();
   const ticket = await resolveTicket({ ticketId, tokenNumber, qrPayload });
   if (!ticket) {
     const error = new Error('Ticket not found in system');
@@ -145,6 +155,7 @@ const verifyTicket = async ({ ticketId, tokenNumber, qrPayload, selectedMonument
  * Validates and marks ticket as used
  */
 const validateTicket = async ({ ticketId, tokenNumber, qrPayload, staffId, selectedMonumentId, forceMark = false }) => {
+  await syncExpiredTickets();
   const ticket = await resolveTicket({ ticketId, tokenNumber, qrPayload });
   if (!ticket) {
     const error = new Error('Ticket not found');

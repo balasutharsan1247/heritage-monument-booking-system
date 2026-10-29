@@ -27,6 +27,7 @@ import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { useToast } from '../components/ui/Toast';
 import { useAuth } from '../context/AuthContext';
+import { StatusBadge } from '../components/ui/StatusBadge';
 
 export default function StaffValidate() {
   const { user } = useAuth();
@@ -646,7 +647,11 @@ export default function StaffValidate() {
                 )}
                 <div className="flex-1">
                   <span className="font-bold text-xs uppercase tracking-wide block">
-                    {currentTicket.valid ? 'VALID PASS — READY TO MARK' : 'INVALID PASS'}
+                    {currentTicket.valid 
+                      ? 'VALID PASS — READY TO MARK' 
+                      : currentTicket.status === 'expired' || currentTicket.reason?.toLowerCase().includes('expired')
+                      ? 'EXPIRED TICKET — ADMISSION DENIED'
+                      : 'INVALID PASS'}
                   </span>
                   <span className="text-xs opacity-90 block">
                     {currentTicket.reason}
@@ -660,9 +665,12 @@ export default function StaffValidate() {
                   <span className="text-[10px] uppercase font-bold text-charcoal-500 block">
                     Ticket Token
                   </span>
-                  <span className="text-xl font-black font-mono text-maroon-900 tracking-tight">
-                    #{currentTicket.tokenNumber}
-                  </span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xl font-black font-mono text-maroon-900 tracking-tight">
+                      #{currentTicket.tokenNumber}
+                    </span>
+                    <StatusBadge type="ticket" status={currentTicket.status} />
+                  </div>
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] uppercase font-bold text-charcoal-500 block">

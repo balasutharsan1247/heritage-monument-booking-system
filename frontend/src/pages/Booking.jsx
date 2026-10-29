@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
+import { openRazorpayPayment } from '../utils/razorpay';
 import { 
   Calendar, 
   Clock, 
@@ -39,6 +41,8 @@ const QUICK_QUANTITIES = [
 export default function Booking() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const auth = useAuth?.() || {};
+  const user = auth.user;
 
   const [monument, setMonument] = useState(null);
   const [wallet, setWallet] = useState(null);
@@ -106,6 +110,73 @@ export default function Booking() {
 
     try {
       const [slotStart, slotEnd] = slot.split('-');
+
+      // Razorpay Direct Gateway Flow
+      if (paymentMethod === 'direct' && totalCost > 0) {
+        // 1. Create Order on backend
+        const orderRes = await api.createPaymentOrder({
+          amount: totalCost,
+          purpose: 'ticket',
+          details: {
+            monumentId: id,
+            monumentName: monument.name,
+          },
+        });
+
+        if (!orderRes.success) {
+          setError(orderRes.message || 'Could not initiate Razorpay payment order');
+          setSubmitting(false);
+          return;
+        }
+
+        // 2. Open Razorpay Checkout or Dev Sandbox Simulator
+        await openRazorpayPayment({
+          order: orderRes.order,
+          keyId: orderRes.keyId,
+          isMock: orderRes.isMock,
+          name: monument.name,
+          description: `${quantity} ${visitorCategory === 'foreign' ? 'Foreign' : 'Domestic'} Pass (${slotStart}–${slotEnd})`,
+          prefill: {
+            name: user?.name || '',
+            email: user?.email || '',
+          },
+          onSuccess: async (paymentData) => {
+            try {
+              // 3. Verify Payment and Generate Confirmed Ticket
+              const verifyRes = await api.verifyPayment({
+                ...paymentData,
+                purpose: 'ticket',
+                details: {
+                  monumentId: id,
+                  visitDate: date,
+                  slotStart,
+                  slotEnd,
+                  quantity,
+                  visitorCategory,
+                },
+              });
+
+              if (verifyRes.success) {
+                const ticketId = verifyRes.primaryTicketId || (Array.isArray(verifyRes.data) ? verifyRes.data[0]._id : verifyRes.data?._id);
+                navigate(`/tickets/${ticketId}`);
+              } else {
+                setError(verifyRes.message || 'Payment signature verification failed.');
+                setSubmitting(false);
+              }
+            } catch (err) {
+              setError('Failed to verify payment with server. Please check your tickets tab.');
+              setSubmitting(false);
+            }
+          },
+          onFailure: (errMsg) => {
+            setError(errMsg || 'Payment was cancelled or could not be completed.');
+            setSubmitting(false);
+          },
+        });
+        return;
+      }
+
+      // Standard / Wallet / Free booking flow
       const res = await api.bookTicket({
         monumentId: id,
         visitDate: date,
@@ -125,7 +196,9 @@ export default function Booking() {
     } catch (err) {
       setError('A network error occurred while booking. Please try again.');
     } finally {
-      setSubmitting(false);
+      if (paymentMethod !== 'direct' || totalCost === 0) {
+        setSubmitting(false);
+      }
     }
   };
 
@@ -417,12 +490,15 @@ export default function Booking() {
                   <div className="flex items-center justify-between w-full">
                     <span className="flex items-center gap-1.5 font-bold text-sm">
                       <CreditCard className="w-4 h-4 text-maroon-800" />
-                      Direct Gateway
+                      Razorpay Gateway
                     </span>
                     {paymentMethod === 'direct' && <CheckCircle2 className="w-4 h-4 text-maroon-800 shrink-0" />}
                   </div>
-                  <span className="mt-1.5 text-[11px] text-charcoal-600">
-                    Pay via UPI / Card at booking
+                  <span className="mt-1.5 text-[11px] text-charcoal-600 flex items-center justify-between">
+                    <span>UPI, Cards, NetBanking</span>
+                    <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                      Sandbox
+                    </span>
                   </span>
                 </button>
               </div>

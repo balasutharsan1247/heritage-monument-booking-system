@@ -1,4 +1,19 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const getBaseApiUrl = () => {
+  let url = import.meta.env.VITE_API_URL;
+  if (!url) {
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      return `${window.location.origin}/api`;
+    }
+    return 'http://localhost:5000/api';
+  }
+  url = url.trim().replace(/\/+$/, '');
+  if (!url.endsWith('/api')) {
+    url = `${url}/api`;
+  }
+  return url;
+};
+
+export const API_URL = getBaseApiUrl();
 
 const getHeaders = () => {
   const token = localStorage.getItem('token');
@@ -81,4 +96,9 @@ export const api = {
   topupWallet: (data) => fetch(`${API_URL}/wallet/topup`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
   debitWallet: (data) => fetch(`${API_URL}/wallet/debit`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
   getWalletTransactions: (page = 1, limit = 50) => fetch(`${API_URL}/wallet/transactions?page=${page}&limit=${limit}`, { headers: getHeaders() }).then(r => r.json()),
+
+  // Payments (Razorpay)
+  getRazorpayKey: () => fetch(`${API_URL}/payments/key`, { headers: getHeaders() }).then(r => r.json()),
+  createPaymentOrder: (data) => fetch(`${API_URL}/payments/create-order`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
+  verifyPayment: (data) => fetch(`${API_URL}/payments/verify`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }).then(r => r.json()),
 };

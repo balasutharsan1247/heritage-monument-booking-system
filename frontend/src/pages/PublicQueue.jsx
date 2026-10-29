@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useQueueSocket } from '../hooks/useQueueSocket';
-import { Landmark, ArrowLeft, Users, Maximize2, Minimize2, Sparkles, Clock } from 'lucide-react';
+import { Landmark, ArrowLeft, Users, Maximize2, Minimize2, Sparkles, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
 
 export default function PublicQueue() {
   const { id } = useParams();
@@ -10,6 +10,8 @@ export default function PublicQueue() {
   const [monument, setMonument] = useState(null);
   const [queue, setQueue] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [flash, setFlash] = useState(false);
@@ -22,29 +24,69 @@ export default function PublicQueue() {
   }, []);
 
   const fetchQueue = useCallback(async () => {
+    if (!id) return;
     try {
       const res = await api.getPublicQueue(id);
-      if (res.success) {
+      if (res && res.success) {
         setQueue(res.data);
       } else {
-        setQueue({ current: null, waiting: [] });
+        setQueue((prev) => prev || { current: null, waiting: [] });
       }
-    } catch (err) {
-      setQueue({ current: null, waiting: [] });
+    } catch {
+      setQueue((prev) => prev || { current: null, waiting: [] });
     }
   }, [id]);
 
   const { socketState } = useQueueSocket(id, fetchQueue);
 
+  // Polling heartbeat: keeps the display updated even if WebSocket is disconnected or proxy limits WS
   useEffect(() => {
-    api.getMonument(id)
-      .then((res) => {
-        if (res.success) setMonument(res.data);
-      })
-      .finally(() => setLoading(false));
-
-    fetchQueue();
+    if (!id) return;
+    const interval = setInterval(() => {
+      fetchQueue();
+    }, 5000);
+    return () => clearInterval(interval);
   }, [id, fetchQueue]);
+
+  const loadMonument = useCallback(async (isSilent = false) => {
+    if (!id) {
+      setError('No Monument ID was specified.');
+      setLoading(false);
+      return;
+    }
+    if (!isSilent) setLoading(true);
+    try {
+      const res = await api.getMonument(id);
+      if (res && res.success && res.data) {
+        setMonument(res.data);
+        setError(null);
+      } else {
+        setError(res?.message || 'Monument not found or temporarily inactive.');
+      }
+    } catch (err) {
+      console.error('Error fetching monument:', err);
+      setError(err?.message || 'Could not connect to backend server. Backend might be starting up.');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    loadMonument();
+    fetchQueue();
+  }, [id, loadMonument, fetchQueue]);
+
+  // Auto-retry when initial load fails (e.g., during backend cold starts on Render/Railway)
+  useEffect(() => {
+    if (error && !monument && retryCount < 4) {
+      const timer = setTimeout(() => {
+        setRetryCount((c) => c + 1);
+        loadMonument(true);
+        fetchQueue();
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, monument, retryCount, loadMonument, fetchQueue]);
 
   const currentToken = queue?.current?.tokenNumber;
   const waitingList = queue?.waiting || [];
@@ -79,7 +121,7 @@ export default function PublicQueue() {
     }
   };
 
-  if (loading || !monument) {
+  if (loading && !monument) {
     return (
       <div
         className="fixed inset-0 z-50 kiosk-display-root bg-[#0d0d12] bg-charcoal-950 text-white flex flex-col items-center justify-center p-8 space-y-4"
@@ -89,6 +131,48 @@ export default function PublicQueue() {
         <p className="text-lg font-sans font-semibold text-sandstone-300 tracking-wide">
           Loading Virtual Queue Display...
         </p>
+        <p className="text-xs text-sandstone-500 font-mono">
+          Connecting to live system {retryCount > 0 ? `(Attempt ${retryCount + 1}/5)` : ''}
+        </p>
+      </div>
+    );
+  }
+
+  if (error && !monument) {
+    return (
+      <div
+        className="fixed inset-0 z-50 kiosk-display-root bg-[#0d0d12] bg-charcoal-950 text-white flex flex-col items-center justify-center p-8 text-center max-w-lg mx-auto space-y-6"
+        style={{ backgroundColor: '#0d0d12', color: '#ffffff' }}
+      >
+        <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 shadow-xl">
+          <AlertTriangle className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold font-sans text-white">Queue Display Unavailable</h2>
+          <p className="text-sm text-sandstone-400">{error}</p>
+          <p className="text-xs text-sandstone-500 font-mono">
+            Monument ID: <span className="text-gold-400">{id}</span>
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button
+            onClick={() => {
+              setRetryCount(0);
+              loadMonument();
+              fetchQueue();
+            }}
+            className="px-5 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-600 text-charcoal-950 font-bold text-sm transition-all shadow-lg shadow-gold-500/20 flex items-center gap-2 cursor-pointer"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Retry Connection
+          </button>
+          <button
+            onClick={handleExit}
+            className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-sandstone-200 text-sm font-medium transition-all border border-white/10 cursor-pointer"
+          >
+            Return to Portal
+          </button>
+        </div>
       </div>
     );
   }

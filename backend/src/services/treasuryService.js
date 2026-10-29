@@ -42,6 +42,12 @@ const getOrCreateTreasuryWallet = async () => {
   if (!anyUser) {
     throw new Error('No users found in database to associate with Central Treasury');
   }
+  wallet = await Wallet.findOne({ userId: anyUser._id });
+  if (wallet) {
+    wallet.isTreasury = true;
+    await wallet.save();
+    return wallet;
+  }
   wallet = await Wallet.create({
     userId: anyUser._id,
     balance: 0,

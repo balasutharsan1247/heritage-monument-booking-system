@@ -57,8 +57,21 @@ const ticketSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['booked', 'used', 'cancelled'],
+    enum: ['booked', 'used', 'cancelled', 'expired'],
     default: 'booked',
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['wallet', 'razorpay', 'cash', 'direct', 'free'],
+    default: 'wallet',
+  },
+  paymentId: {
+    type: String,
+    default: null,
+  },
+  orderId: {
+    type: String,
+    default: null,
   },
   checkInTime: {
     type: Date,

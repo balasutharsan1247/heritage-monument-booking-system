@@ -7,6 +7,7 @@ const User = require('../models/User');
 const treasuryService = require('../services/treasuryService');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const { syncExpiredTickets } = require('../services/ticketExpiryService');
 
 const bookTicket = async (req, res) => {
   try {
@@ -195,6 +196,7 @@ const bookTicket = async (req, res) => {
 
 const getMyTickets = async (req, res) => {
   try {
+    await syncExpiredTickets({ visitorId: req.user.id });
     const tickets = await Ticket.find({ visitorId: req.user.id }).populate('monumentId', 'name location imageUrl');
     const formattedTickets = tickets.map(t => ({
       _id: t._id,
@@ -216,6 +218,7 @@ const getMyTickets = async (req, res) => {
 
 const getTicket = async (req, res) => {
   try {
+    await syncExpiredTickets({ visitorId: req.user.id });
     const ticket = await Ticket.findOne({ _id: req.params.id, visitorId: req.user.id }).populate('monumentId', 'name location imageUrl');
     
     if (!ticket) {

@@ -5,6 +5,7 @@ const User = require('../models/User');
 const Wallet = require('../models/Wallet');
 const treasuryService = require('../services/treasuryService');
 const mongoose = require('mongoose');
+const { syncExpiredTickets } = require('../services/ticketExpiryService');
 
 // Helper to get date boundaries
 const getDateRange = (startDate, endDate) => {
@@ -30,6 +31,9 @@ const getDateRange = (startDate, endDate) => {
 // GET /api/admin/dashboard/summary
 exports.getSummary = async (req, res) => {
   try {
+    // Automatically synchronize any tickets whose time slots have passed without check-in
+    await syncExpiredTickets();
+
     const { startDate, endDate } = req.query;
     const hasDateRange = Boolean(startDate || endDate);
     const { start, end } = getDateRange(startDate, endDate);
@@ -37,7 +41,7 @@ exports.getSummary = async (req, res) => {
     // If date range is specified, match tickets within that range.
     // If not specified, summarize ALL tickets (all-time) so dashboard properties reflect the whole system!
     const matchCriteria = {
-      status: { $in: ['booked', 'used'] }
+      status: { $in: ['booked', 'used', 'expired'] }
     };
     if (hasDateRange) {
       matchCriteria.visitDate = { $gte: start, $lte: end };
@@ -71,15 +75,18 @@ exports.getSummary = async (req, res) => {
 
     const validQuery = { status: 'booked' };
     const usedQuery = { status: 'used' };
+    const expiredQuery = { status: 'expired' };
     const cancelledQuery = { status: 'cancelled' };
     if (hasDateRange) {
       validQuery.visitDate = { $gte: start, $lte: end };
       usedQuery.visitDate = { $gte: start, $lte: end };
+      expiredQuery.visitDate = { $gte: start, $lte: end };
       cancelledQuery.visitDate = { $gte: start, $lte: end };
     }
 
     const validTickets = await Ticket.countDocuments(validQuery);
     const usedTickets = await Ticket.countDocuments(usedQuery);
+    const expiredTickets = await Ticket.countDocuments(expiredQuery);
     const cancelledTickets = await Ticket.countDocuments(cancelledQuery);
 
     let treasuryBalance = 0;
@@ -132,6 +139,7 @@ exports.getSummary = async (req, res) => {
         totalVisitors: result.totalVisitors,
         validTickets,
         usedTickets,
+        expiredTickets,
         cancelledTickets,
         totalMonuments,
         allMonumentsCount,
@@ -144,6 +152,7 @@ exports.getSummary = async (req, res) => {
           totalVisitors: result.totalVisitors,
           validTickets,
           usedTickets,
+          expiredTickets,
           cancelledTickets,
           totalMonuments,
           totalUsers

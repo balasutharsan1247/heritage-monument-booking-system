@@ -220,12 +220,14 @@ export default function AdminDashboard() {
   const totalUsersCount = summary?.totalUsers ?? summary?.measured?.totalUsers ?? users.length;
   const validTickets = summary?.validTickets ?? summary?.measured?.validTickets ?? 0;
   const usedTickets = summary?.usedTickets ?? summary?.measured?.usedTickets ?? 0;
+  const expiredTickets = summary?.expiredTickets ?? summary?.measured?.expiredTickets ?? 0;
   const cancelledTickets = summary?.cancelledTickets ?? summary?.measured?.cancelledTickets ?? 0;
 
   const chartData = [
     { name: 'Total Bookings', value: totalTickets },
     { name: 'Confirmed', value: validTickets },
     { name: 'Checked In', value: usedTickets },
+    { name: 'Expired', value: expiredTickets },
     { name: 'Cancelled', value: cancelledTickets },
   ];
 
@@ -466,7 +468,7 @@ export default function AdminDashboard() {
             <KPICard
               title="Bookings"
               value={totalTickets}
-              subtitle={`${usedTickets} visited`}
+              subtitle={`${usedTickets} visited • ${expiredTickets} expired`}
               icon={Ticket}
             />
             <KPICard

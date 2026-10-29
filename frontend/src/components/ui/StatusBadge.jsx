@@ -36,6 +36,12 @@ export const StatusBadge = ({ type = 'ticket', status, className = '' }) => {
             Cancelled
           </Badge>
         );
+      case 'expired':
+        return (
+          <Badge variant="danger" icon={Clock} className={`bg-rose-50 text-rose-800 border-rose-200 ${className}`}>
+            Expired
+          </Badge>
+        );
       default:
         return (
           <Badge variant="default" className={className}>
